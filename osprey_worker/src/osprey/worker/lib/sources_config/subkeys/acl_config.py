@@ -11,7 +11,7 @@ from osprey.worker.lib.storage.temporary_ability_token import TemporaryAbilityTo
 from osprey.worker.ui_api.osprey.lib.abilities import Ability
 from pydantic import BaseModel, validator
 
-OKTA_GROUP_PREFIX = 'App-TSDDemo-'
+OKTA_GROUP_PREFIX = 'App-Osprey-'
 
 
 class UsersConfig(BaseModel):
