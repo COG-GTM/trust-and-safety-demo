@@ -226,7 +226,7 @@ def test_kpi_summary_aggregates_buckets(app: Flask, client: 'FlaskClient[Respons
     with mock.patch(
         'osprey.worker.ui_api.osprey.views.analytics.TimeseriesDruidQuery.execute',
         return_value=raw_results,
-    ):
+    ) as execute_mock:
         res = client.post(
             url_for('analytics.kpi_summary'),
             content_type='application/json',
@@ -239,6 +239,31 @@ def test_kpi_summary_aggregates_buckets(app: Flask, client: 'FlaskClient[Respons
     assert body['total_buckets'] == 3
     assert body['start'] == datetime(2024, 1, 1).isoformat()
     assert body['end'] == datetime(2024, 1, 2).isoformat()
+    # Per-user filtering must be applied to the aggregate count
+    _, kwargs = execute_mock.call_args
+    abilities = kwargs.get('query_filter_abilities') or []
+    assert len(abilities) == 1
+    assert abilities[0].name == 'CAN_VIEW_EVENTS_BY_ACTION'
+
+
+@pytest.mark.use_rules_sources(restricted_config)
+def test_kpi_summary_passes_restricted_ability(app: Flask, client: 'FlaskClient[Response]') -> None:
+    with mock.patch(
+        'osprey.worker.ui_api.osprey.views.analytics.TimeseriesDruidQuery.execute',
+        return_value=[{'timestamp': '2024-01-01T00:00:00', 'result': {'count': 1}}],
+    ) as execute_mock:
+        res = client.post(
+            url_for('analytics.kpi_summary'),
+            content_type='application/json',
+            data=_timeseries_payload(),
+        )
+
+    assert res.status_code == 200
+    _, kwargs = execute_mock.call_args
+    abilities = kwargs.get('query_filter_abilities') or []
+    assert len(abilities) == 1
+    assert abilities[0].name == 'CAN_VIEW_EVENTS_BY_ACTION'
+    assert abilities[0].allow_specific == {'allowed_action'}
 
 
 @pytest.mark.use_rules_sources(config)

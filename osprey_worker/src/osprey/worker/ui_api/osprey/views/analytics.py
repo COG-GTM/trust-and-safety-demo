@@ -136,7 +136,11 @@ def kpi_summary(request_model: _AnalyticsTimeseriesQuery) -> Any:
         granularity=request_model.granularity,
     )
 
-    raw_results = timeseries_request.execute() or []
+    query_filter_ability = get_current_user().get_ability(CanViewEventsByAction)
+    if query_filter_ability:
+        raw_results = timeseries_request.execute(query_filter_abilities=[query_filter_ability]) or []
+    else:
+        raw_results = timeseries_request.execute() or []
 
     total_events = 0
     buckets = 0
