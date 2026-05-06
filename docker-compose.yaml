@@ -138,11 +138,18 @@ services:
       context: .
       dockerfile: osprey_worker/Dockerfile
     depends_on:
-      - osprey-worker
-      - druid-broker
-      - postgres
-      - snowflake-id-worker
-      - minio
+      osprey-worker:
+        condition: service_started
+      druid-broker:
+        condition: service_started
+      postgres:
+        condition: service_started
+      snowflake-id-worker:
+        condition: service_started
+      minio:
+        condition: service_healthy
+      minio-bucket-init:
+        condition: service_completed_successfully
     ports:
       - "127.0.0.1:5004:5004"
     command: ["osprey-ui-api"]
