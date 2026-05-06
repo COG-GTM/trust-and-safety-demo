@@ -60,9 +60,11 @@ def create_app() -> Flask:
     from .lib.audit import audit_request
     from .views import (
         abilities,
+        analytics,
         bulk_actions,
         bulk_history,
         config,
+        dashboards,
         docs,
         entities,
         events,
@@ -115,6 +117,8 @@ def create_app() -> Flask:
     _register_with_prefix(app, bulk_history.blueprint)
     _register_with_prefix(app, rules_visualizer.blueprint)
     _register_with_prefix(app, bulk_actions.blueprint)
+    _register_with_prefix(app, dashboards.blueprint)
+    _register_with_prefix(app, analytics.blueprint)
 
     app.after_request(audit_request)
 
