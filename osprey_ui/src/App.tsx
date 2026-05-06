@@ -6,6 +6,8 @@ import { getApplicationConfig } from './actions/ConfigActions';
 import UdfDocsView from './components/docs/UdfDocsView';
 import BulkJobHistoryView from './components/bulk_job_history/BulkJobHistory';
 import RulesVisualizerView from './components/rules_visualizer/RulesVisualizer';
+import DashboardListView from './components/dashboards/DashboardListView';
+import DashboardView from './components/dashboards/DashboardView';
 import EntityViewBar from './components/entities/EntityViewBar';
 import EventPage from './components/event_stream/EventPage';
 import NavBar from './components/navigation/NavBar';
@@ -72,6 +74,12 @@ const AppRouter: React.FC = () => {
                   </Route>
                   <Route path={Routes.RULES_VISUALIZER}>
                     <RulesVisualizerView />
+                  </Route>
+                  <Route exact path={Routes.DASHBOARDS}>
+                    <DashboardListView />
+                  </Route>
+                  <Route exact path={Routes.DASHBOARD}>
+                    <DashboardView />
                   </Route>
                   <Route exact path={[Routes.ENTITY, Routes.HOME, Routes.SAVED_QUERY]}>
                     <QueryView />

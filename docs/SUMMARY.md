@@ -9,6 +9,7 @@
   - [IDE Setup](development/ide.md)
   - [Release Process](development/releases.md)
 - [User Interface](UI.md)
+- [Analytics Dashboards](dashboards.md)
 - [Writing Rules](rules.md)
 - [User Research & Personas](user_personas.md)
 

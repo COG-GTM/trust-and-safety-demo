@@ -9,6 +9,8 @@ export const Routes = {
   BULK_JOB_HISTORY: '/bulk-job-history',
   RULES_VISUALIZER: '/rules-visualizer',
   BULK_ACTION: '/bulk-action',
+  DASHBOARDS: '/dashboards',
+  DASHBOARD: '/dashboards/:dashboardId',
 };
 
 export const DATE_FORMAT = 'M/D/YYYY h:mm:ssa zz';
