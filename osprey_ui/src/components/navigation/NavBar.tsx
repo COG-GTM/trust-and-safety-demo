@@ -54,7 +54,7 @@ const NavBar = ({ children }: React.PropsWithChildren) => {
     <div className={classNames(styles.appWrapper, { [styles.isRecording]: isRecordingClicks })}>
       <div className={styles.navBar}>
         <MenuOutlined onClick={handleToggleMenu} className={styles.menuOutlinedIcon} />
-        <Link to={Routes.HOME}>
+        <Link to={Routes.DASHBOARD}>
           <Logo />
         </Link>
       </div>
@@ -67,8 +67,14 @@ const NavBar = ({ children }: React.PropsWithChildren) => {
             mode="inline"
             inlineCollapsed={!showMenu}
           >
+            <Menu.Item key={Routes.DASHBOARD}>
+              <Link to={Routes.DASHBOARD}>Dashboard</Link>
+            </Menu.Item>
+            <Menu.Item key={Routes.RULE_PERFORMANCE}>
+              <Link to={Routes.RULE_PERFORMANCE}>Rule Performance</Link>
+            </Menu.Item>
             <Menu.Item key={Routes.HOME}>
-              <Link to={Routes.HOME}>Home</Link>
+              <Link to={Routes.HOME}>Event Stream</Link>
             </Menu.Item>
             <Menu.Item key={Routes.QUERY_HISTORY}>
               <Link to={Routes.QUERY_HISTORY}>Query History</Link>

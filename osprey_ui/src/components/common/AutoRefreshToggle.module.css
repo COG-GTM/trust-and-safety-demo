@@ -1,0 +1,15 @@
+.container {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.icon {
+  color: var(--icon-primary);
+  font-size: 14px;
+  display: inline-flex;
+}
+
+.select {
+  min-width: 64px;
+}
