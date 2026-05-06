@@ -110,6 +110,12 @@ async function fetchOrThrow<T>(path: string, params: Record<string, string | num
 
 export interface SummaryParams {
   window: DashboardWindow;
+  /**
+   * Number of windows to shift backwards. ``0`` (default) returns the current
+   * window; ``1`` returns the immediately-preceding window of the same length
+   * (used for KPI trend comparisons).
+   */
+  offset?: number;
 }
 
 export interface TimeseriesParams {
@@ -143,8 +149,13 @@ export interface HealthParams {
   window: DashboardWindow;
 }
 
-export const fetchDashboardSummary = ({ window }: SummaryParams): Promise<DashboardSummary> =>
-  fetchOrThrow<DashboardSummary>('dashboard/summary', { window });
+export const fetchDashboardSummary = ({ window, offset }: SummaryParams): Promise<DashboardSummary> => {
+  const params: Record<string, string | number> = { window };
+  if (offset != null && offset > 0) {
+    params.offset = offset;
+  }
+  return fetchOrThrow<DashboardSummary>('dashboard/summary', params);
+};
 
 export const fetchDashboardTimeseries = (params: TimeseriesParams): Promise<TimeseriesResponse> =>
   fetchOrThrow<TimeseriesResponse>('dashboard/timeseries', {

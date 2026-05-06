@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import datetime
 from typing import TYPE_CHECKING, Any, Dict, List
 from unittest.mock import patch
 
@@ -35,6 +36,13 @@ def _stub_druid_sql(rows_by_query: Dict[str, List[Dict[str, Any]]] | None = None
 
 def test_summary_returns_kpis(app: 'Flask', client: 'FlaskClient[Response]') -> None:
     canned = {
+        'INFORMATION_SCHEMA.COLUMNS': [
+            {'COLUMN_NAME': '__time'},
+            {'COLUMN_NAME': '__verdicts'},
+            {'COLUMN_NAME': '__entity_label_mutations'},
+            {'COLUMN_NAME': '__error_count'},
+            {'COLUMN_NAME': 'UserId'},
+        ],
         'COUNT(*) AS total_events': [
             {
                 'total_events': 1000,
@@ -69,6 +77,35 @@ def test_summary_returns_kpis(app: 'Flask', client: 'FlaskClient[Response]') -> 
 def test_summary_rejects_unknown_window(app: 'Flask', client: 'FlaskClient[Response]') -> None:
     res = client.get(url_for('dashboard.get_summary', window='2y'))
     assert res.status_code == 400
+
+
+def test_summary_offset_shifts_window_back(app: 'Flask', client: 'FlaskClient[Response]') -> None:
+    """``offset=1`` should query the immediately-preceding window of the same length."""
+    captured: List[Dict[str, Any]] = []
+
+    def fake(sql: str, params=None):  # type: ignore[no-untyped-def]
+        captured.append({'sql': sql, 'params': params})
+        if 'INFORMATION_SCHEMA.COLUMNS' in sql:
+            return [{'COLUMN_NAME': '__time'}]
+        return [{'total_events': 0, 'flagged_events': 0}]
+
+    with patch('osprey.worker.ui_api.osprey.views.dashboard._druid_sql', side_effect=fake):
+        res_current = client.get(url_for('dashboard.get_summary', window='24h'))
+        res_previous = client.get(url_for('dashboard.get_summary', window='24h', offset=1))
+
+    assert res_current.status_code == 200
+    assert res_previous.status_code == 200
+    current_window = res_current.json['window']
+    previous_window = res_previous.json['window']
+    current_start = datetime.fromisoformat(current_window['start'])
+    current_end = datetime.fromisoformat(current_window['end'])
+    previous_start = datetime.fromisoformat(previous_window['start'])
+    previous_end = datetime.fromisoformat(previous_window['end'])
+    # The previous window must have the same duration as the current one and be
+    # shifted back by approximately one duration.
+    assert (current_end - current_start) == (previous_end - previous_start)
+    delta = (current_start - previous_end).total_seconds()
+    assert -1.0 <= delta <= 1.0
 
 
 def test_timeseries_returns_points(app: 'Flask', client: 'FlaskClient[Response]') -> None:

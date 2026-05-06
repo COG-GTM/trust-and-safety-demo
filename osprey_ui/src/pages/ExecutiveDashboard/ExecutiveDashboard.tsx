@@ -23,23 +23,16 @@ import { useDashboardQuery } from './useDashboardQuery';
 
 import styles from './ExecutiveDashboard.module.css';
 
-const PREVIOUS_WINDOW: Record<string, string> = {
-  '24h': '7d',
-  '7d': '30d',
-  '30d': '90d',
-  '90d': '90d',
-};
-
 const ExecutiveDashboard: React.FC = () => {
   const window = useDashboardStore((s) => s.window);
   const granularity = useDashboardStore((s) => s.granularity);
   const entityType = useDashboardStore((s) => s.entityType);
 
   const summary = useDashboardQuery(() => fetchDashboardSummary({ window }), [window]);
-  const previous = useDashboardQuery(
-    () => fetchDashboardSummary({ window: PREVIOUS_WINDOW[window] as typeof window }),
-    [window]
-  );
+  // Compare against the immediately-preceding window of the same length
+  // (e.g. last 24h vs the 24h before that) so KPI trend percentages are
+  // meaningful.
+  const previous = useDashboardQuery(() => fetchDashboardSummary({ window, offset: 1 }), [window]);
   const totalSeries = useDashboardQuery(
     () => fetchDashboardTimeseries({ window, granularity, metric: 'total_events' }),
     [window, granularity]

@@ -67,13 +67,19 @@ def _bad_request(message: str) -> Response:
     return Response(response=message, status=HTTPStatus.BAD_REQUEST, mimetype='text/plain')
 
 
-def _parse_window(value: Optional[str]) -> Tuple[datetime, datetime, timedelta]:
-    """Parse a window string ('24h', '7d', ...) into ``(start, end, duration)``."""
+def _parse_window(value: Optional[str], offset_periods: int = 0) -> Tuple[datetime, datetime, timedelta]:
+    """Parse a window string ('24h', '7d', ...) into ``(start, end, duration)``.
+
+    ``offset_periods`` shifts the window backwards by that many ``duration``s so
+    callers can request the immediately-preceding period of the same length —
+    e.g. ``offset_periods=1`` on ``'24h'`` returns the 24h window that ended at
+    the start of the current 24h.
+    """
     key = (value or _DEFAULT_WINDOW).lower()
     if key not in _WINDOWS:
         raise ValueError(f'Unknown window: {value!r}. Expected one of {sorted(_WINDOWS)}.')
     duration = _WINDOWS[key]
-    end = datetime.now(timezone.utc)
+    end = datetime.now(timezone.utc) - duration * offset_periods
     return end - duration, end, duration
 
 
@@ -135,13 +141,32 @@ def _entity_feature_columns(entity_type: str) -> List[str]:
     return [name for name, et in mapping.items() if et == entity_type]
 
 
-def _flagged_predicate() -> str:
+# Effect columns considered when classifying an event as 'flagged'. Not every
+# datasource carries every column — we narrow the predicate to whichever ones
+# actually exist so the query doesn't error on legacy / partial schemas.
+_EFFECT_COLUMNS = ('__verdicts', '__entity_label_mutations', '__ban_user')
+
+
+def _flagged_predicate(available_columns: Optional[set[str]] = None) -> str:
     """SQL predicate that identifies a 'flagged' event.
 
     An event is considered flagged when at least one engine effect was emitted:
-    a verdict, a label mutation, or a ban effect.
+    a verdict, a label mutation, or a ban effect. ``available_columns`` may be
+    passed to restrict the predicate to columns that actually exist in the
+    datasource (Druid raises on references to undeclared columns).
     """
-    return '("__verdicts" IS NOT NULL OR "__entity_label_mutations" IS NOT NULL OR "__ban_user" IS NOT NULL)'
+    if available_columns is None:
+        cols = list(_EFFECT_COLUMNS)
+    else:
+        cols = [c for c in _EFFECT_COLUMNS if c in available_columns]
+    if not cols:
+        return '1 = 0'
+    return '(' + ' OR '.join(f'"{c}" IS NOT NULL' for c in cols) + ')'
+
+
+def _count_if(predicate: str) -> str:
+    """Portable equivalent of ``COUNT_IF(predicate)`` for older Druid SQL builds."""
+    return f'SUM(CASE WHEN {predicate} THEN 1 ELSE 0 END)'
 
 
 def _time_predicate(start: datetime, end: datetime) -> Tuple[str, List[Dict[str, Any]]]:
@@ -173,29 +198,44 @@ def get_summary() -> Any:
 
     Includes total events, flagged events, flag rate, unique flagged entities,
     label mutations applied, and a verdict breakdown.
+
+    Pass ``offset=1`` to query the immediately-preceding window of the same
+    length (used by the dashboard to compute period-over-period KPI trends).
     """
     try:
-        start, end, _ = _parse_window(request.args.get('window'))
+        offset = max(0, int(request.args.get('offset') or 0))
+    except (TypeError, ValueError):
+        return _bad_request('offset must be a non-negative integer')
+    try:
+        start, end, _ = _parse_window(request.args.get('window'), offset_periods=offset)
     except ValueError as e:
         return _bad_request(str(e))
 
     time_clause, params = _time_predicate(start, end)
-    flagged = _flagged_predicate()
+    available = set(_datasource_columns())
+    flagged = _flagged_predicate(available)
     ds = _datasource()
 
-    summary_rows = _druid_sql(
-        f'''
-        SELECT
-            COUNT(*) AS total_events,
-            COUNT_IF({flagged}) AS flagged_events,
-            COUNT(DISTINCT CASE WHEN {flagged} THEN "UserId" END) AS unique_entities_flagged,
-            COUNT_IF("__entity_label_mutations" IS NOT NULL) AS label_mutations,
-            COUNT_IF("__error_count" > 0) AS error_events
-        FROM "{ds}"
-        WHERE {time_clause}
-        ''',
-        params,
-    )
+    label_expr = _count_if('"__entity_label_mutations" IS NOT NULL') if '__entity_label_mutations' in available else '0'
+    error_expr = _count_if('"__error_count" > 0') if '__error_count' in available else '0'
+
+    try:
+        summary_rows = _druid_sql(
+            f'''
+            SELECT
+                COUNT(*) AS total_events,
+                {_count_if(flagged)} AS flagged_events,
+                COUNT(DISTINCT CASE WHEN {flagged} THEN "UserId" END) AS unique_entities_flagged,
+                {label_expr} AS label_mutations,
+                {error_expr} AS error_events
+            FROM "{ds}"
+            WHERE {time_clause}
+            ''',
+            params,
+        )
+    except Exception as exc:
+        logger.warning('Summary query failed: %s', exc)
+        summary_rows = []
 
     row = summary_rows[0] if summary_rows else {}
     total = int(row.get('total_events') or 0)
@@ -203,19 +243,20 @@ def get_summary() -> Any:
     flag_rate = (flagged_count / total) if total > 0 else 0.0
 
     verdict_rows: List[Dict[str, Any]] = []
-    try:
-        verdict_rows = _druid_sql(
-            f'''
-            SELECT "__verdicts" AS verdict, COUNT(*) AS cnt
-            FROM "{ds}"
-            WHERE {time_clause} AND "__verdicts" IS NOT NULL
-            GROUP BY "__verdicts"
-            ORDER BY cnt DESC
-            ''',
-            params,
-        )
-    except Exception as exc:
-        logger.warning('Verdict breakdown query failed: %s', exc)
+    if '__verdicts' in available:
+        try:
+            verdict_rows = _druid_sql(
+                f'''
+                SELECT "__verdicts" AS verdict, COUNT(*) AS cnt
+                FROM "{ds}"
+                WHERE {time_clause} AND "__verdicts" IS NOT NULL
+                GROUP BY "__verdicts"
+                ORDER BY cnt DESC
+                ''',
+                params,
+            )
+        except Exception as exc:
+            logger.warning('Verdict breakdown query failed: %s', exc)
 
     return jsonify(
         {
@@ -247,20 +288,27 @@ def get_timeseries() -> Any:
     if metric not in valid_metrics:
         return _bad_request(f'Unknown metric: {metric!r}. Expected one of {sorted(valid_metrics)}.')
 
-    flagged = _flagged_predicate()
+    available = set(_datasource_columns())
+    flagged = _flagged_predicate(available)
     time_clause, params = _time_predicate(start, end)
     ds = _datasource()
 
     if metric == 'flag_rate':
         select_expr = (
-            f'CASE WHEN COUNT(*) = 0 THEN 0.0 ELSE CAST(COUNT_IF({flagged}) AS DOUBLE) / COUNT(*) END AS value'
+            f'CASE WHEN COUNT(*) = 0 THEN 0.0 ELSE CAST({_count_if(flagged)} AS DOUBLE) / COUNT(*) END AS value'
         )
     elif metric == 'flagged_events':
-        select_expr = f'COUNT_IF({flagged}) AS value'
+        select_expr = f'{_count_if(flagged)} AS value'
     elif metric == 'labels_applied':
-        select_expr = 'COUNT_IF("__entity_label_mutations" IS NOT NULL) AS value'
+        if '__entity_label_mutations' in available:
+            select_expr = _count_if('"__entity_label_mutations" IS NOT NULL') + ' AS value'
+        else:
+            select_expr = '0 AS value'
     elif metric == 'errors':
-        select_expr = 'COUNT_IF("__error_count" > 0) AS value'
+        if '__error_count' in available:
+            select_expr = _count_if('"__error_count" > 0') + ' AS value'
+        else:
+            select_expr = '0 AS value'
     else:
         select_expr = 'COUNT(*) AS value'
 
@@ -315,7 +363,7 @@ def get_top_rules() -> Any:
         if col not in _INFRASTRUCTURE_COLUMNS and col not in feature_columns and not col.startswith('__')
     ]
     if not candidates:
-        return jsonify({'rules': []})
+        return jsonify({'rules': [], 'total_matches': 0})
 
     time_clause, params = _time_predicate(start, end)
     ds = _datasource()
@@ -327,7 +375,7 @@ def get_top_rules() -> Any:
         )
     except Exception as exc:
         logger.warning('Top rules query failed: %s', exc)
-        return jsonify({'rules': []})
+        return jsonify({'rules': [], 'total_matches': 0})
 
     row = rows[0] if rows else {}
     raw_counts: List[Tuple[str, int]] = [(col, int(row.get(col) or 0)) for col in candidates]
@@ -364,7 +412,7 @@ def get_top_entities() -> Any:
             return jsonify({'entity_type': entity_type, 'entities': []})
 
     time_clause, params = _time_predicate(start, end)
-    flagged = _flagged_predicate()
+    flagged = _flagged_predicate(set(_datasource_columns()))
     ds = _datasource()
 
     coalesced = 'COALESCE(' + ', '.join(f'"{c}"' for c in columns) + ')'
@@ -407,21 +455,23 @@ def get_verdicts_breakdown() -> Any:
 
     time_clause, params = _time_predicate(start, end)
     ds = _datasource()
-    sql = f'''
-        SELECT
-            TIME_FLOOR("__time", '{granularity_period}') AS bucket,
-            "__verdicts" AS verdict,
-            COUNT(*) AS cnt
-        FROM "{ds}"
-        WHERE {time_clause} AND "__verdicts" IS NOT NULL
-        GROUP BY 1, 2
-        ORDER BY 1
-    '''
-    try:
-        rows = _druid_sql(sql, params)
-    except Exception as exc:
-        logger.warning('Verdicts breakdown query failed: %s', exc)
-        rows = []
+    rows: List[Dict[str, Any]] = []
+    if '__verdicts' in set(_datasource_columns()):
+        sql = f'''
+            SELECT
+                TIME_FLOOR("__time", '{granularity_period}') AS bucket,
+                "__verdicts" AS verdict,
+                COUNT(*) AS cnt
+            FROM "{ds}"
+            WHERE {time_clause} AND "__verdicts" IS NOT NULL
+            GROUP BY 1, 2
+            ORDER BY 1
+        '''
+        try:
+            rows = _druid_sql(sql, params)
+        except Exception as exc:
+            logger.warning('Verdicts breakdown query failed: %s', exc)
+            rows = []
 
     return jsonify(
         {
@@ -457,20 +507,22 @@ def get_labels_activity() -> Any:
     time_clause, params = _time_predicate(start, end)
     ds = _datasource()
 
-    sql = f'''
-        SELECT
-            TIME_FLOOR("__time", '{granularity_period}') AS bucket,
-            COUNT(*) AS automated
-        FROM "{ds}"
-        WHERE {time_clause} AND "__entity_label_mutations" IS NOT NULL
-        GROUP BY 1
-        ORDER BY 1
-    '''
-    try:
-        timeseries_rows = _druid_sql(sql, params)
-    except Exception as exc:
-        logger.warning('Label activity timeseries query failed: %s', exc)
-        timeseries_rows = []
+    timeseries_rows: List[Dict[str, Any]] = []
+    if '__entity_label_mutations' in set(_datasource_columns()):
+        sql = f'''
+            SELECT
+                TIME_FLOOR("__time", '{granularity_period}') AS bucket,
+                COUNT(*) AS automated
+            FROM "{ds}"
+            WHERE {time_clause} AND "__entity_label_mutations" IS NOT NULL
+            GROUP BY 1
+            ORDER BY 1
+        '''
+        try:
+            timeseries_rows = _druid_sql(sql, params)
+        except Exception as exc:
+            logger.warning('Label activity timeseries query failed: %s', exc)
+            timeseries_rows = []
 
     labelled_entities = 0
     try:
@@ -509,18 +561,24 @@ def get_pipeline_health() -> Any:
 
     time_clause, params = _time_predicate(start, end)
     ds = _datasource()
+    available = set(_datasource_columns())
+    error_expr = _count_if('"__error_count" > 0') if '__error_count' in available else '0'
 
-    rows = _druid_sql(
-        f'''
-        SELECT
-            COUNT(*) AS total_events,
-            COUNT_IF("__error_count" > 0) AS error_events,
-            MAX("__time") AS latest_event
-        FROM "{ds}"
-        WHERE {time_clause}
-        ''',
-        params,
-    )
+    try:
+        rows = _druid_sql(
+            f'''
+            SELECT
+                COUNT(*) AS total_events,
+                {error_expr} AS error_events,
+                MAX("__time") AS latest_event
+            FROM "{ds}"
+            WHERE {time_clause}
+            ''',
+            params,
+        )
+    except Exception as exc:
+        logger.warning('Pipeline health summary query failed: %s', exc)
+        rows = []
     row = rows[0] if rows else {}
     total = int(row.get('total_events') or 0)
     errors = int(row.get('error_events') or 0)
@@ -528,18 +586,22 @@ def get_pipeline_health() -> Any:
     events_per_minute = total / minutes
     error_rate = (errors / total) if total > 0 else 0.0
 
-    throughput_rows = _druid_sql(
-        f'''
-        SELECT TIME_FLOOR("__time", 'PT1M') AS bucket,
-               COUNT(*) AS events,
-               COUNT_IF("__error_count" > 0) AS errors
-        FROM "{ds}"
-        WHERE {time_clause}
-        GROUP BY 1
-        ORDER BY 1
-        ''',
-        params,
-    )
+    try:
+        throughput_rows = _druid_sql(
+            f'''
+            SELECT TIME_FLOOR("__time", 'PT1M') AS bucket,
+                   COUNT(*) AS events,
+                   {error_expr} AS errors
+            FROM "{ds}"
+            WHERE {time_clause}
+            GROUP BY 1
+            ORDER BY 1
+            ''',
+            params,
+        )
+    except Exception as exc:
+        logger.warning('Pipeline health throughput query failed: %s', exc)
+        throughput_rows = []
 
     return jsonify(
         {
