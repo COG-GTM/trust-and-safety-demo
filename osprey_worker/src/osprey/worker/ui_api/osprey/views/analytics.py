@@ -74,9 +74,14 @@ def timeseries(request_model: TimeseriesDruidQuery) -> Any:
         require_ability_with_request(request_model, CanViewEventsByEntity)
     # Honor CanViewEventsByAction: scope Druid filter to actions the caller is permitted to see.
     query_filter_ability = get_current_user().get_ability(CanViewEventsByAction)
-    if query_filter_ability:
-        return jsonify(request_model.execute(query_filter_abilities=[query_filter_ability]))
-    return jsonify(request_model.execute())
+    try:
+        if query_filter_ability:
+            return jsonify(request_model.execute(query_filter_abilities=[query_filter_ability]))
+        return jsonify(request_model.execute())
+    except ValueError as e:
+        # ``_query_with_filter`` raises ValueError when ``start > end``; surface
+        # that to the caller as a 400 instead of leaking a 500.
+        abort(BAD_REQUEST, str(e))
 
 
 @blueprint.route('/analytics/groupby', methods=['POST'])
@@ -94,13 +99,15 @@ def groupby_dimension(request_model: TopNDruidQuery) -> Any:
         require_ability_with_request(request_model, CanViewEventsByEntity)
     query_filter_ability = get_current_user().get_ability(CanViewEventsByAction)
 
-    if query_filter_ability:
-        result = request_model.execute(query_filter_abilities=[query_filter_ability])
-    else:
-        result = request_model.execute()
-
-    if isinstance(result, ValueError):
-        abort(BAD_REQUEST, str(result))
+    try:
+        if query_filter_ability:
+            result = request_model.execute(query_filter_abilities=[query_filter_ability])
+        else:
+            result = request_model.execute()
+    except ValueError as e:
+        # ``_query_with_filter`` raises ValueError when ``start > end``; surface
+        # that to the caller as a 400 instead of leaking a 500.
+        abort(BAD_REQUEST, str(e))
 
     return jsonify(result.dict())
 
@@ -118,16 +125,18 @@ def _summary_groupby(payload: Dict[str, Any], dimension: str, default_limit: int
     top_n = TopNDruidQuery(dimension=dimension, limit=limit, **base.dict())
 
     query_filter_ability = get_current_user().get_ability(CanViewEventsByAction)
-    if query_filter_ability:
-        result = top_n.execute(
-            query_filter_abilities=[query_filter_ability],
-            calculate_previous_period=False,
-        )
-    else:
-        result = top_n.execute(calculate_previous_period=False)
-
-    if isinstance(result, ValueError):
-        abort(BAD_REQUEST, str(result))
+    try:
+        if query_filter_ability:
+            result = top_n.execute(
+                query_filter_abilities=[query_filter_ability],
+                calculate_previous_period=False,
+            )
+        else:
+            result = top_n.execute(calculate_previous_period=False)
+    except ValueError as e:
+        # ``_query_with_filter`` raises ValueError when ``start > end``; surface
+        # that to the caller as a 400 instead of leaking a 500.
+        abort(BAD_REQUEST, str(e))
 
     return jsonify(result.dict())
 
@@ -173,9 +182,14 @@ def throughput() -> Any:
 
     # Honor CanViewEventsByAction: scope Druid filter to actions the caller is permitted to see.
     query_filter_ability = get_current_user().get_ability(CanViewEventsByAction)
-    if query_filter_ability:
-        return jsonify(timeseries_query.execute(query_filter_abilities=[query_filter_ability]))
-    return jsonify(timeseries_query.execute())
+    try:
+        if query_filter_ability:
+            return jsonify(timeseries_query.execute(query_filter_abilities=[query_filter_ability]))
+        return jsonify(timeseries_query.execute())
+    except ValueError as e:
+        # ``_query_with_filter`` raises ValueError when ``start > end``; surface
+        # that to the caller as a 400 instead of leaking a 500.
+        abort(BAD_REQUEST, str(e))
 
 
 @blueprint.route('/analytics/labels/summary', methods=['GET'])
@@ -286,10 +300,15 @@ def execution_results() -> Any:
     )
     # Honor CanViewEventsByAction: scope Druid filter to actions the caller is permitted to see.
     query_filter_ability = get_current_user().get_ability(CanViewEventsByAction)
-    if query_filter_ability:
-        points = timeseries_query.execute(query_filter_abilities=[query_filter_ability])
-    else:
-        points = timeseries_query.execute()
+    try:
+        if query_filter_ability:
+            points = timeseries_query.execute(query_filter_abilities=[query_filter_ability])
+        else:
+            points = timeseries_query.execute()
+    except ValueError as e:
+        # ``_query_with_filter`` raises ValueError when ``start > end``; surface
+        # that to the caller as a 400 instead of leaking a 500.
+        abort(BAD_REQUEST, str(e))
 
     summary = {'total': 0, 'points': len(points) if isinstance(points, list) else 0}
     if isinstance(points, list):

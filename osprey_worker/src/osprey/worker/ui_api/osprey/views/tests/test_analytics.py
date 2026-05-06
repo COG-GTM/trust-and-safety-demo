@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 from http import HTTPStatus
 from typing import Any, Dict, List
 from unittest import mock
@@ -458,3 +458,66 @@ def test_analytics_labels_summary_recent_unwraps_serialized_envelope(
     # Second row: legacy/unwrapped shape passes through unchanged.
     assert body['recent'][1]['entity_key'] == 'User:2'
     assert set(body['recent'][1]['labels'].keys()) == {'manual_review'}
+
+
+@pytest.mark.use_rules_sources(_ANALYTICS_CONFIG)
+def test_analytics_timeseries_returns_400_when_start_after_end(
+    app: Flask,
+    client: 'FlaskClient[Response]',
+    mock_druid_client: Any,
+    fake_druid: Any,
+) -> None:
+    """Regression: ``_query_with_filter`` (druid.py) raises ValueError when
+    ``start > end``. A previous ``isinstance(result, ValueError)`` check was
+    dead code (raise prevents assignment), so the exception leaked as a 500.
+    Now we wrap the execute() call in try/except and surface a 400."""
+    end = datetime.now()
+    start = end + timedelta(hours=1)  # start strictly after end
+    body = TimeseriesDruidQuery(
+        start=start,
+        end=end,
+        query_filter='',
+        entity=None,
+        granularity='hour',
+    ).json()
+
+    res = client.post(
+        url_for('analytics.timeseries'),
+        data=body,
+        content_type='application/json',
+    )
+
+    assert res.status_code == HTTPStatus.BAD_REQUEST, res.data
+    # Druid is never reached because we fail before issuing the query.
+    fake_druid.client._post.assert_not_called()
+
+
+@pytest.mark.use_rules_sources(_ANALYTICS_CONFIG)
+def test_analytics_groupby_returns_400_when_start_after_end(
+    app: Flask,
+    client: 'FlaskClient[Response]',
+    mock_druid_client: Any,
+    fake_druid: Any,
+) -> None:
+    """Same regression as the timeseries case, but for the ``/analytics/groupby``
+    endpoint which previously had its own dead ``isinstance(result, ValueError)``
+    check that could not be reached."""
+    end = datetime.now()
+    start = end + timedelta(hours=1)
+    body = TopNDruidQuery(
+        dimension='Verdict',
+        limit=10,
+        start=start,
+        end=end,
+        query_filter='',
+        entity=None,
+    ).json()
+
+    res = client.post(
+        url_for('analytics.groupby_dimension'),
+        data=body,
+        content_type='application/json',
+    )
+
+    assert res.status_code == HTTPStatus.BAD_REQUEST, res.data
+    fake_druid.client._post.assert_not_called()
