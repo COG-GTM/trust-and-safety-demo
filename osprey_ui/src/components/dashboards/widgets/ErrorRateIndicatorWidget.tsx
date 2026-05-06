@@ -15,16 +15,21 @@ interface Props {
 const ErrorRateIndicatorWidget = ({ widget, ctx }: Props) => {
   const [points, setPoints] = React.useState<AnalyticsTimeseriesPoint[] | null>(null);
   const granularity = widget.dataSource.granularity ?? 'hour';
-  const filter = widget.dataSource.queryFilter ?? 'HasError = true';
+  // ctx.queryFilter already merges the dashboard global filter with the
+  // widget's own dataSource.queryFilter (see buildWidgetContext). If the user
+  // hasn't configured a widget filter, fall back to the standard error filter.
+  const widgetFilter = widget.dataSource.queryFilter?.trim();
+  const effectiveFilter = widgetFilter
+    ? ctx.queryFilter
+    : [ctx.queryFilter, 'HasError = true'].filter(Boolean).join(' AND ');
 
   React.useEffect(() => {
     let cancelled = false;
     setPoints(null);
-    const merged = [ctx.queryFilter, filter].filter(Boolean).join(' AND ');
     getAnalyticsTimeseries({
       start: ctx.start,
       end: ctx.end,
-      query_filter: merged,
+      query_filter: effectiveFilter,
       granularity,
     }).then((p) => {
       if (!cancelled) setPoints(p);
@@ -32,7 +37,7 @@ const ErrorRateIndicatorWidget = ({ widget, ctx }: Props) => {
     return () => {
       cancelled = true;
     };
-  }, [ctx.start, ctx.end, ctx.queryFilter, ctx.refreshKey, granularity, filter]);
+  }, [ctx.start, ctx.end, effectiveFilter, ctx.refreshKey, granularity]);
 
   if (points == null) {
     return (
