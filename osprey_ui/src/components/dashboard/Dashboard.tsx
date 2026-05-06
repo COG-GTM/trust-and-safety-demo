@@ -376,7 +376,7 @@ const Dashboard: React.FC = () => {
           <ActionBreakdownChart
             breakdown={actionBreakdown}
             totalEvents={kpis.totalEvents}
-            flaggedPosts={kpis.flaggedEvents}
+            flaggedPosts={kpis.flaggedPostCount}
             totalPosts={totalPosts}
           />
         </div>

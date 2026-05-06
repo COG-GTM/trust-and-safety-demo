@@ -8,6 +8,7 @@ export interface KpiData {
   totalEvents: number;
   flaggedEvents: number;
   flaggedRate: number;
+  flaggedPostCount: number;
   uniqueUsers: number;
   banActions: number;
   errorRate: number;
@@ -68,6 +69,7 @@ function computeDashboardMetrics(events: OspreyEvent[]): Omit<DashboardData, 'ti
   const flaggedEventsList: FlaggedEvent[] = [];
 
   let flaggedCount = 0;
+  let flaggedPostCount = 0;
   let banCount = 0;
   let errorCount = 0;
 
@@ -84,6 +86,7 @@ function computeDashboardMetrics(events: OspreyEvent[]): Omit<DashboardData, 'ti
 
     // Flagged / ban / error
     if (isFlagged) flaggedCount++;
+    if (isFlagged && eventType === 'create_post') flaggedPostCount++;
     if (hasBan) banCount++;
     if (hasError) errorCount++;
 
@@ -123,6 +126,7 @@ function computeDashboardMetrics(events: OspreyEvent[]): Omit<DashboardData, 'ti
     totalEvents: totalEvents,
     flaggedEvents: flaggedCount,
     flaggedRate: totalEvents > 0 ? (flaggedCount / totalEvents) * 100 : 0,
+    flaggedPostCount,
     uniqueUsers,
     banActions: banCount,
     errorRate: totalEvents > 0 ? (errorCount / totalEvents) * 100 : 0,
