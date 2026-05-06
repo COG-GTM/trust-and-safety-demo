@@ -218,6 +218,7 @@ def get_summary() -> Any:
 
     label_expr = _count_if('"__entity_label_mutations" IS NOT NULL') if '__entity_label_mutations' in available else '0'
     error_expr = _count_if('"__error_count" > 0') if '__error_count' in available else '0'
+    unique_entities_expr = f'COUNT(DISTINCT CASE WHEN {flagged} THEN "UserId" END)' if 'UserId' in available else '0'
 
     try:
         summary_rows = _druid_sql(
@@ -225,7 +226,7 @@ def get_summary() -> Any:
             SELECT
                 COUNT(*) AS total_events,
                 {_count_if(flagged)} AS flagged_events,
-                COUNT(DISTINCT CASE WHEN {flagged} THEN "UserId" END) AS unique_entities_flagged,
+                {unique_entities_expr} AS unique_entities_flagged,
                 {label_expr} AS label_mutations,
                 {error_expr} AS error_events
             FROM "{ds}"
