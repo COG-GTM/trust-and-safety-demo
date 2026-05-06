@@ -112,7 +112,7 @@ function getChartData(timeseriesData: TimeseriesResult[]): SeriesOptionsType[] {
       type: CHART_TYPE,
       data: data,
       name: '# Events',
-      color: '#8e5ea2',
+      color: '#1227ce',
       // By default, Highcarts groups multiple series for the same x together;
       // because we only have one data series, we don't want to have any padding between the lines.
       groupPadding: 0,

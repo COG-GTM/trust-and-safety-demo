@@ -41,7 +41,7 @@
 }
 
 .selected {
-  color: #8e5ea2 !important;
+  color: var(--brand-primary) !important;
 }
 
 .selectedShort {
