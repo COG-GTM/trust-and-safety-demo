@@ -175,7 +175,7 @@ export const fetchTopEntities = ({
   fetchOrThrow<TopEntitiesResponse>('dashboard/top-entities', {
     window,
     limit,
-    /* eslint-disable-next-line */
+    /* eslint-disable-next-line camelcase -- backend API expects snake_case query parameter */
     entity_type: entityType,
   });
 

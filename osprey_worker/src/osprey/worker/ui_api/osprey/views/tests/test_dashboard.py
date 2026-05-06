@@ -150,6 +150,16 @@ def test_top_rules_returns_sorted_results(app: 'Flask', client: 'FlaskClient[Res
     assert res.json['total_matches'] == 10
 
 
+def test_top_rules_rejects_non_numeric_limit(app: 'Flask', client: 'FlaskClient[Response]') -> None:
+    res = client.get(url_for('dashboard.get_top_rules', window='24h', limit='abc'))
+    assert res.status_code == 400
+
+
+def test_top_entities_rejects_non_numeric_limit(app: 'Flask', client: 'FlaskClient[Response]') -> None:
+    res = client.get(url_for('dashboard.get_top_entities', window='24h', limit='abc'))
+    assert res.status_code == 400
+
+
 def test_top_entities_uses_entity_mapping(app: 'Flask', client: 'FlaskClient[Response]') -> None:
     canned = {
         'GROUP BY 1': [

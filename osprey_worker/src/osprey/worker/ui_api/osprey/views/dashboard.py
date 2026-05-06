@@ -348,7 +348,10 @@ def get_top_rules() -> Any:
         start, end, _ = _parse_window(request.args.get('window'))
     except ValueError as e:
         return _bad_request(str(e))
-    limit = max(1, min(int(request.args.get('limit', 10) or 10), 100))
+    try:
+        limit = max(1, min(int(request.args.get('limit', 10) or 10), 100))
+    except (TypeError, ValueError):
+        return _bad_request('limit must be an integer between 1 and 100')
 
     feature_columns: set[str] = set()
     try:
@@ -400,7 +403,10 @@ def get_top_entities() -> Any:
         start, end, _ = _parse_window(request.args.get('window'))
     except ValueError as e:
         return _bad_request(str(e))
-    limit = max(1, min(int(request.args.get('limit', 10) or 10), 100))
+    try:
+        limit = max(1, min(int(request.args.get('limit', 10) or 10), 100))
+    except (TypeError, ValueError):
+        return _bad_request('limit must be an integer between 1 and 100')
     entity_type = request.args.get('entity_type') or 'User'
 
     columns = _entity_feature_columns(entity_type)
