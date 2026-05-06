@@ -1,0 +1,116 @@
+.kpiContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  text-align: center;
+  gap: 4px;
+}
+
+.kpiNumber {
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.1;
+}
+
+.kpiLabel {
+  font-size: 13px;
+  color: var(--text-secondary, var(--text-light-primary));
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.kpiSubLabel {
+  font-size: 11px;
+  color: var(--text-muted, var(--icon-muted));
+}
+
+.chartWrapper {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.chartArea {
+  flex-grow: 1;
+  min-height: 0;
+}
+
+.distributionList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.distributionRow {
+  display: grid;
+  grid-template-columns: 120px 1fr 60px;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+}
+
+.distributionLabel {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.distributionBar {
+  height: 12px;
+  background-color: var(--background-secondary-alt);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.distributionBarFill {
+  height: 100%;
+  background-color: var(--brand-primary, #1227ce);
+  border-radius: 4px;
+}
+
+.distributionCount {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-light-primary);
+}
+
+.empty {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-light-primary);
+  font-size: 12px;
+}
+
+.eventList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 100%;
+}
+
+.eventRow {
+  font-size: 12px;
+  padding: 6px 8px;
+  border: 1px solid var(--divider);
+  border-radius: 4px;
+  background-color: var(--background-secondary-alt);
+}
+
+.eventTimestamp {
+  font-variant-numeric: tabular-nums;
+  color: var(--text-light-primary);
+  font-size: 11px;
+  margin-bottom: 2px;
+}
+
+.eventActionName {
+  font-weight: 600;
+  color: var(--text-primary);
+}

@@ -70,6 +70,9 @@ const NavBar = ({ children }: React.PropsWithChildren) => {
             <Menu.Item key={Routes.HOME}>
               <Link to={Routes.HOME}>Home</Link>
             </Menu.Item>
+            <Menu.Item key={Routes.DASHBOARD}>
+              <Link to={Routes.DASHBOARD}>Dashboard</Link>
+            </Menu.Item>
             <Menu.Item key={Routes.QUERY_HISTORY}>
               <Link to={Routes.QUERY_HISTORY}>Query History</Link>
             </Menu.Item>
