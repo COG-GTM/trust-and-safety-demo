@@ -107,11 +107,22 @@ const useDashboardStore = create<DashboardStore>((set, get) => ({
 
   updateRglLayout: (rgl) =>
     set((state) => {
+      let changed = false;
       const merged = state.draftLayout.rgl.map((existing) => {
         const updated = rgl.find((item) => item.i === existing.i);
-        return updated != null ? { ...existing, ...updated } : existing;
+        if (updated == null) return existing;
+        if (
+          existing.x !== updated.x ||
+          existing.y !== updated.y ||
+          existing.w !== updated.w ||
+          existing.h !== updated.h
+        ) {
+          changed = true;
+        }
+        return { ...existing, ...updated };
       });
-      return { draftLayout: { ...state.draftLayout, rgl: merged }, isDirty: true };
+      if (!changed) return state;
+      return { ...state, draftLayout: { ...state.draftLayout, rgl: merged }, isDirty: true };
     }),
 
   markClean: () => set({ isDirty: false }),

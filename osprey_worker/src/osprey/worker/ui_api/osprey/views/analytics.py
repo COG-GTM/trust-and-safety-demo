@@ -10,12 +10,12 @@ from typing import Any, Dict, List, Optional
 from flask import Blueprint, abort, jsonify
 from osprey.worker.ui_api.osprey.lib.abilities import (
     CanViewEventsByAction,
-    CanViewEventsByEntity,
     require_ability,
     require_ability_with_request,
 )
 from pydantic.main import BaseModel
 
+from ..lib.auth import get_current_user
 from ..lib.druid import (
     BaseDruidQuery,
     TimeseriesDruidQuery,
@@ -77,7 +77,14 @@ def _topn_query(request_model: _AnalyticsTopNQuery, dimension: Optional[str] = N
         dimension=target_dimension,
         limit=request_model.limit,
     )
-    response = topn_request.execute(calculate_previous_period=False)
+    query_filter_ability = get_current_user().get_ability(CanViewEventsByAction)
+    if query_filter_ability:
+        response = topn_request.execute(
+            calculate_previous_period=False,
+            query_filter_abilities=[query_filter_ability],
+        )
+    else:
+        response = topn_request.execute(calculate_previous_period=False)
     if isinstance(response, ValueError):
         abort(400, str(response))
     return _topn_to_distribution(target_dimension, response)
@@ -115,10 +122,10 @@ def effects_breakdown(request_model: _AnalyticsTopNQuery) -> Any:
 
 @blueprint.route('/analytics/kpi-summary', methods=['POST'])
 @marshal_with(_AnalyticsTimeseriesQuery)
-@require_ability(CanViewEventsByEntity)
+@require_ability(CanViewEventsByAction)
 def kpi_summary(request_model: _AnalyticsTimeseriesQuery) -> Any:
     """Return aggregate counts (total events / buckets) for the time window."""
-    require_ability_with_request(request_model, CanViewEventsByEntity)
+    require_ability_with_request(request_model, CanViewEventsByAction)
 
     timeseries_request = TimeseriesDruidQuery(
         start=request_model.start,
