@@ -154,12 +154,14 @@ const DashboardView = () => {
       layout_json: layout,
     };
     const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
+    link.href = url;
     link.download = `${current.name.replace(/\W+/g, '_')}.json`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   const handleRefreshWidget = (widgetId: string) => {

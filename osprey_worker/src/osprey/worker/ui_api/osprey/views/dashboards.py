@@ -108,4 +108,5 @@ def delete_dashboard(dashboard_id: int) -> Any:
         abort(NOT_FOUND, 'Dashboard not found')
 
     dashboard.delete()
-    return Response(status=NO_CONTENT, response='Dashboard deleted')
+    # Per RFC 7231 §6.3.5, a 204 response MUST NOT include a message body.
+    return Response(status=NO_CONTENT)
