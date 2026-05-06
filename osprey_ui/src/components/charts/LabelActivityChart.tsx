@@ -24,11 +24,14 @@ const LabelActivityChart: React.FC<LabelActivityChartProps> = ({ data, loading, 
       if (!seriesByLabel[addedKey]) seriesByLabel[addedKey] = new Map();
       if (!seriesByLabel[removedKey]) seriesByLabel[removedKey] = new Map();
       seriesByLabel[addedKey].set(ts, (seriesByLabel[addedKey].get(ts) ?? 0) + point.added);
-      seriesByLabel[removedKey].set(ts, (seriesByLabel[removedKey].get(ts) ?? 0) + point.removed);
+      // Stack removals below the axis (negative values) so that the
+      // ``negativeColor`` styling below actually applies and additions vs
+      // removals are visually distinguishable on the same chart.
+      seriesByLabel[removedKey].set(ts, (seriesByLabel[removedKey].get(ts) ?? 0) - point.removed);
     }
 
     const seriesEntries = Object.entries(seriesByLabel)
-      .filter(([, points]) => Array.from(points.values()).some((v) => v > 0))
+      .filter(([, points]) => Array.from(points.values()).some((v) => v !== 0))
       .map(([name, points], idx) => ({
         type: 'column' as const,
         name,
