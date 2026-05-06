@@ -3,6 +3,11 @@ from typing import Any
 
 from flask import Blueprint, Response, abort, jsonify, request
 from osprey.worker.lib.storage.dashboards import Dashboard
+from osprey.worker.ui_api.osprey.lib.abilities import (
+    CanCreateAndEditDashboards,
+    CanViewDashboards,
+    require_ability,
+)
 
 from ..lib.auth import get_current_user_email
 
@@ -17,6 +22,7 @@ def _parse_dashboard_id(dashboard_id: str) -> int:
 
 
 @blueprint.route('/dashboards', methods=['GET'])
+@require_ability(CanViewDashboards)
 def get_all_dashboards() -> Any:
     created_by = request.args.get('created_by')
     dashboards = Dashboard.get_all(created_by=created_by)
@@ -24,6 +30,7 @@ def get_all_dashboards() -> Any:
 
 
 @blueprint.route('/dashboards/<dashboard_id>', methods=['GET'])
+@require_ability(CanViewDashboards)
 def get_dashboard(dashboard_id: str) -> Any:
     dashboard = Dashboard.get_one_with_id(_parse_dashboard_id(dashboard_id))
     if dashboard is None:
@@ -32,6 +39,7 @@ def get_dashboard(dashboard_id: str) -> Any:
 
 
 @blueprint.route('/dashboards', methods=['POST'])
+@require_ability(CanCreateAndEditDashboards)
 def create_dashboard() -> Any:
     request_data = request.get_json(force=True) or {}
 
@@ -53,6 +61,7 @@ def create_dashboard() -> Any:
 
 
 @blueprint.route('/dashboards/<dashboard_id>', methods=['PUT'])
+@require_ability(CanCreateAndEditDashboards)
 def update_dashboard(dashboard_id: str) -> Any:
     dashboard = Dashboard.get_one_with_id(_parse_dashboard_id(dashboard_id))
     if dashboard is None:
@@ -77,6 +86,7 @@ def update_dashboard(dashboard_id: str) -> Any:
 
 
 @blueprint.route('/dashboards/<dashboard_id>', methods=['DELETE'])
+@require_ability(CanCreateAndEditDashboards)
 def delete_dashboard(dashboard_id: str) -> Any:
     dashboard = Dashboard.get_one_with_id(_parse_dashboard_id(dashboard_id))
     if dashboard is None:

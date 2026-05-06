@@ -2,8 +2,46 @@ import json
 from http import HTTPStatus
 from typing import Any
 
+import pytest
 from flask import Flask, Response, url_for
 from flask.testing import FlaskClient
+
+config = {
+    'main.sml': '',
+    'config.yaml': json.dumps(
+        {
+            'acl': {
+                'users': {
+                    'local-dev@localhost': {
+                        'abilities': [
+                            {'name': 'CAN_VIEW_DASHBOARDS', 'allow_all': True},
+                            {'name': 'CAN_CREATE_AND_EDIT_DASHBOARDS', 'allow_all': True},
+                        ]
+                    }
+                }
+            }
+        }
+    ),
+}
+
+view_only_config = {
+    'main.sml': '',
+    'config.yaml': json.dumps(
+        {
+            'acl': {
+                'users': {
+                    'local-dev@localhost': {
+                        'abilities': [
+                            {'name': 'CAN_VIEW_DASHBOARDS', 'allow_all': True},
+                        ]
+                    }
+                }
+            }
+        }
+    ),
+}
+
+pytestmark = pytest.mark.use_rules_sources(config)
 
 
 def _create_dashboard(client: 'FlaskClient[Response]', name: str = 'My Dashboard', layout: Any = None) -> dict:
@@ -120,3 +158,45 @@ def test_get_all_dashboards_filters_by_creator(app: Flask, client: 'FlaskClient[
     )
     assert filtered.status_code == HTTPStatus.OK
     assert all(entry['created_by'] == 'local-dev@localhost' for entry in filtered.json)
+
+
+@pytest.mark.use_rules_sources({'main.sml': '', 'config.yaml': json.dumps({'acl': {'users': {}}})})
+def test_dashboards_require_view_ability(app: Flask, client: 'FlaskClient[Response]') -> None:
+    res = client.get(url_for('dashboards.get_all_dashboards'))
+    assert res.status_code == HTTPStatus.UNAUTHORIZED
+    assert res.data.decode('utf-8') == "User `local-dev@localhost` doesn't have ability `CAN_VIEW_DASHBOARDS`"
+
+
+@pytest.mark.use_rules_sources({'main.sml': '', 'config.yaml': json.dumps({'acl': {'users': {}}})})
+def test_dashboards_require_view_ability_for_get_one(app: Flask, client: 'FlaskClient[Response]') -> None:
+    res = client.get(url_for('dashboards.get_dashboard', dashboard_id=1))
+    assert res.status_code == HTTPStatus.UNAUTHORIZED
+
+
+@pytest.mark.use_rules_sources(view_only_config)
+def test_dashboards_create_requires_edit_ability(app: Flask, client: 'FlaskClient[Response]') -> None:
+    res = client.post(
+        url_for('dashboards.create_dashboard'),
+        data=json.dumps({'name': 'forbidden', 'layout_json': {}}),
+        content_type='application/json',
+    )
+    assert res.status_code == HTTPStatus.UNAUTHORIZED
+    assert (
+        res.data.decode('utf-8') == "User `local-dev@localhost` doesn't have ability `CAN_CREATE_AND_EDIT_DASHBOARDS`"
+    )
+
+
+@pytest.mark.use_rules_sources(view_only_config)
+def test_dashboards_update_requires_edit_ability(app: Flask, client: 'FlaskClient[Response]') -> None:
+    res = client.put(
+        url_for('dashboards.update_dashboard', dashboard_id=1),
+        data=json.dumps({'name': 'forbidden'}),
+        content_type='application/json',
+    )
+    assert res.status_code == HTTPStatus.UNAUTHORIZED
+
+
+@pytest.mark.use_rules_sources(view_only_config)
+def test_dashboards_delete_requires_edit_ability(app: Flask, client: 'FlaskClient[Response]') -> None:
+    res = client.delete(url_for('dashboards.delete_dashboard', dashboard_id=1))
+    assert res.status_code == HTTPStatus.UNAUTHORIZED

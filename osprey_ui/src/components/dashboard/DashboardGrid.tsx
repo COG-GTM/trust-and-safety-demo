@@ -88,6 +88,13 @@ const DashboardGrid: React.FC<Props> = ({
 
   const layoutsByBreakpoint = { lg: layouts, md: layouts, sm: layouts, xs: layouts, xxs: layouts };
 
+  // Only forward layout changes when the user is actively editing. The Responsive
+  // grid fires onLayoutChange on initial mount and whenever it auto-adjusts
+  // positions for a new breakpoint (different column counts). Persisting those
+  // automatic adjustments would mark a clean dashboard as dirty and risk
+  // overwriting the saved layout with breakpoint-specific positions.
+  const handleLayoutChange = isEditing ? (layout: Layout[]) => onLayoutChange(layout) : undefined;
+
   return (
     <div className={styles.dashboardGrid}>
       <ResponsiveGrid
@@ -100,7 +107,7 @@ const DashboardGrid: React.FC<Props> = ({
         isDraggable={isEditing}
         isResizable={isEditing}
         draggableHandle=".react-grid-item-drag-handle"
-        onLayoutChange={(layout) => onLayoutChange(layout)}
+        onLayoutChange={handleLayoutChange}
       >
         {widgets.map((widget) => {
           const title = (widget.config.title as string) || WIDGET_LABELS[widget.type];
