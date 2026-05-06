@@ -54,6 +54,7 @@ def init_from_config(database: str) -> None:
             bulk_action_task,
             bulk_label_task,
             pg_stored_execution,
+            pipeline_metrics,
             queries,
             temporary_ability_token,
         )

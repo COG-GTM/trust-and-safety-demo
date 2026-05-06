@@ -151,6 +151,8 @@ extend-exclude = [
     # Exclude protobuf generated files
     "**/*_pb2*.py",
     "**/*_pb2*.pyi",
+    # Self-contained dashboard project with its own pyproject/requirements
+    "dashboard/**",
 ]
 
 [tool.ruff.format]
@@ -176,6 +178,8 @@ known-first-party = ["osprey_worker", "osprey_rpc", "example_plugins"]
 [tool.fawltydeps]
 code = ["osprey_worker/src", "osprey_rpc/src", "example_plugins/src"]
 deps = ["pyproject.toml"]
+# The dashboard/ subproject vendors its own deps in dashboard/backend/pyproject.toml
+# and is intentionally excluded from the main fawltydeps scan.
 ignore_unused = [
     # Type stubs: used by mypy, never imported directly
     "types-cachetools",
@@ -271,6 +275,8 @@ exclude = [
     ".*_pb2_grpc\\.py$",
     ".*/tests/.*",
     ".*/test_.*\\.py$",
+    # Self-contained dashboard project — type-checked separately via its own venv
+    "^dashboard/.*",
 ]
 
 # required until pydantic explicitly exports Extra
