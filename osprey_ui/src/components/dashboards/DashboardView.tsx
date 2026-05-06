@@ -57,6 +57,18 @@ const DashboardView = () => {
     setCurrent(dashboard);
   }, [dashboardId]);
 
+  // editMode lives in the zustand store and persists across dashboardId
+  // changes. Without this reset, navigating from an in-progress edit on
+  // dashboard A to dashboard B would silently discard A's draft and drop the
+  // user into edit mode on B (which they never asked to edit). setEditMode(false)
+  // also clears selectedWidgetId for us, so this single call is sufficient.
+  // We also drop any per-widget refresh keys held in DashboardView state since
+  // they reference widgets that aren't on the new dashboard.
+  React.useEffect(() => {
+    setEditMode(false);
+    setWidgetRefreshKeys({});
+  }, [dashboardId, setEditMode]);
+
   const layout: DashboardLayoutJson | null = editMode ? draftLayout : (current?.layout_json ?? null);
   const refreshSeconds = layout?.refreshIntervalSeconds ?? 0;
   const { tick: pollTick, force: forcePoll } = useDashboardRefreshTick(editMode ? 0 : refreshSeconds);
