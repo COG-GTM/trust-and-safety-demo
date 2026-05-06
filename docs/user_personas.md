@@ -1,10 +1,10 @@
 # User Research Overview
 
-Osprey is designed for users who need to investigate and take automated action on events in real-time. By interviewing prospective Osprey users, ROOST has drafted the following user personas for developers to better understand who might be interested in using this tool. We hope this research helps the open source community prioritize features to build moving forward!
+T&S Demo is designed for users who need to investigate and take automated action on events in real-time. By interviewing prospective T&S Demo users, ROOST has drafted the following user personas for developers to better understand who might be interested in using this tool. We hope this research helps the open source community prioritize features to build moving forward!
 
 ## T&S Engineers
 
-Most engineers who are interested in potentially using Osprey are like Alice – they do not currently have a viable rules engine due to cost, lack of flexibility, or limited available options. However, they need a tool for real-time event processing to handle adverse events at scale. They also want to optimize how Osprey works with the rest of their tech stack.
+Most engineers who are interested in potentially using T&S Demo are like Alice – they do not currently have a viable rules engine due to cost, lack of flexibility, or limited available options. However, they need a tool for real-time event processing to handle adverse events at scale. They also want to optimize how T&S Demo works with the rest of their tech stack.
 
 ![user_persona_engineer](images/user_persona_engineer.png)
 
@@ -16,7 +16,7 @@ Most engineers who are interested in potentially using Osprey are like Alice –
 
 - When I deploy changes, I want to ensure they will be as effective as possible, to avoid future duplication of work
 
-*Pain points prior to Osprey include:*
+*Pain points prior to T&S Demo include:*
 
 - Bad dev experience in existing rules engines, given lack of flexibility and poor UI
 
@@ -26,7 +26,7 @@ Most engineers who are interested in potentially using Osprey are like Alice –
 
 - Immediate enforcement of preset rules enables bad actors to iterate approaches until successful
 
-*Desired capabilities from Osprey include:*
+*Desired capabilities from T&S Demo include:*
 
 - Core documentation, functionality, and QOL features for easy deployment and interoperability
 
@@ -49,9 +49,9 @@ T&S analysts like Bob are primarily concerned with their ability to (1) intuitiv
 
 - I want to easily build, iterate, and deploy rules, so I can respond to threats without overreliance on Engineering and without losing nuances of my analysis
 
-- When navigating Osprey, I want to easily understand the current platform landscape, including which rules have been applied and which accounts are connected, so I can better understand what types of actions to take
+- When navigating T&S Demo, I want to easily understand the current platform landscape, including which rules have been applied and which accounts are connected, so I can better understand what types of actions to take
 
-*Pain points prior to Osprey include:*
+*Pain points prior to T&S Demo include:*
 
 - Limited open-ended exploration, reducing insight quality / efficiency
 
@@ -61,7 +61,7 @@ T&S analysts like Bob are primarily concerned with their ability to (1) intuitiv
 
 - Poor integration with review tools (e.g., build filtered review queues)
 
-*Desired capabilities from Osprey include:*
+*Desired capabilities from T&S Demo include:*
 
 - Facilitate creative investigations by enabling users to easily query on multiple element types (e.g., event, account age, user history)
 

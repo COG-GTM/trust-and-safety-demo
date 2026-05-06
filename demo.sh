@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Osprey Demo Script
+# T&S Demo Script
 # This script starts all services, generates test data, and opens the UI
 #
 # Usage:
@@ -22,7 +22,7 @@ NC='\033[0m' # No Color
 
 print_banner() {
     echo -e "${BLUE}========================================${NC}"
-    echo -e "${BLUE}       Osprey Demo Setup Script        ${NC}"
+    echo -e "${BLUE}       T&S Demo Setup Script            ${NC}"
     echo -e "${BLUE}========================================${NC}"
     echo ""
 }
@@ -67,7 +67,7 @@ check_port_available() {
 }
 
 check_existing_services() {
-    echo -e "${YELLOW}Checking for existing Osprey services...${NC}"
+    echo -e "${YELLOW}Checking for existing T&S Demo services...${NC}"
 
     # Check for running containers from this compose project
     local running_containers=$(docker ps --filter "name=osprey\|kafka\|postgres\|minio\|druid\|zookeeper\|snowflake" --format "{{.Names}}" 2>/dev/null | head -10)
@@ -117,10 +117,10 @@ check_required_ports() {
         check_port_available $port "Druid MiddleManager Tasks" || failed=1
     done
 
-    # Osprey service ports
-    check_port_available 5001 "Osprey Worker" || failed=1
-    check_port_available 5002 "Osprey UI" || failed=1
-    check_port_available 5004 "Osprey UI API" || failed=1
+    # T&S Demo service ports
+    check_port_available 5001 "T&S Demo Worker" || failed=1
+    check_port_available 5002 "T&S Demo UI" || failed=1
+    check_port_available 5004 "T&S Demo UI API" || failed=1
 
     if [ $failed -eq 1 ]; then
         echo ""
@@ -135,12 +135,12 @@ check_required_ports() {
 setup_repo() {
     # Check if we're already in the osprey repo
     if [ -f "docker-compose.yaml" ] && grep -q "osprey-worker" "docker-compose.yaml" 2>/dev/null; then
-        echo -e "${GREEN}✓ Running from Osprey repository${NC}"
+        echo -e "${GREEN}✓ Running from T&S Demo repository${NC}"
         return 0
     fi
 
     # Check if we need to clone
-    echo -e "${YELLOW}Osprey repository not found. Setting up...${NC}"
+    echo -e "${YELLOW}T&S Demo repository not found. Setting up...${NC}"
 
     if ! command -v git &> /dev/null; then
         echo -e "${RED}✗ Git is not installed. Please install Git first.${NC}"
@@ -156,7 +156,7 @@ setup_repo() {
         echo ""
         return 0
     else
-        echo -e "${YELLOW}Cloning Osprey repository...${NC}"
+        echo -e "${YELLOW}Cloning T&S Demo repository...${NC}"
         git clone --depth 1 "$REPO_URL" "$DEMO_DIR"
     fi
 
@@ -265,8 +265,8 @@ wait_for_container "minio" 90 || exit 1
 wait_for_http_service "Druid Broker" "http://localhost:8082/status" 180 || exit 1
 
 # Wait for osprey services (HTTP check)
-wait_for_http_service "Osprey UI API" "http://localhost:5004/config" 120 || exit 1
-wait_for_http_service "Osprey UI" "http://localhost:5002" 90 || exit 1
+wait_for_http_service "T&S Demo UI API" "http://localhost:5004/config" 120 || exit 1
+wait_for_http_service "T&S Demo UI" "http://localhost:5002" 90 || exit 1
 
 echo ""
 echo -e "${GREEN}✓ All services are ready${NC}"
@@ -294,9 +294,9 @@ echo -e "${GREEN}       Demo Ready!                     ${NC}"
 echo -e "${BLUE}========================================${NC}"
 echo ""
 echo -e "${BLUE}Available Interfaces:${NC}"
-echo -e "  • Osprey UI:      ${GREEN}${UI_URL}${NC}"
+echo -e "  • T&S Demo UI:    ${GREEN}${UI_URL}${NC}"
 echo -e "  • Druid Console:  ${GREEN}http://localhost:8888${NC}"
-echo -e "  • Osprey API:     ${GREEN}http://localhost:5004${NC}"
+echo -e "  • T&S Demo API:   ${GREEN}http://localhost:5004${NC}"
 echo ""
 echo -e "${BLUE}Demo Rules Active:${NC}"
 echo -e "  • ContainsHello  - Bans users who say 'hello'"
@@ -311,7 +311,7 @@ echo -e "  3. Timeseries    - See event volume over time"
 echo -e "  4. Query Filter  - Try: LazyPostRule == True"
 echo -e "  5. Rules Viz     - View the rule dependency graph"
 echo ""
-echo -e "${YELLOW}Opening Osprey UI in browser...${NC}"
+echo -e "${YELLOW}Opening T&S Demo UI in browser...${NC}"
 
 # Open browser (works on macOS, Linux with xdg-open, or WSL)
 if command -v open &> /dev/null; then

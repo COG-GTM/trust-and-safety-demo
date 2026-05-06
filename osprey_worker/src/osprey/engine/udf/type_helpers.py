@@ -51,13 +51,13 @@ def get_osprey_generic_param(t: type, kind: str) -> Optional[type]:
     origin = get_normalized_origin(t) or t
     if not issubclass(origin, OspreyInvariantGeneric):
         raise UnsupportedTypeError(
-            message='Osprey generics must inherit from `OspreyInvariantGeneric`',
+            message='T&S Demo generics must inherit from `OspreyInvariantGeneric`',
             hint=f'generic {kind} type {to_display_str(t)} does not inherit from `OspreyInvariantGeneric`',
         )
 
     if len(generic_params) > 1:
         raise UnsupportedTypeError(
-            message='Osprey generics must have exactly one parameter',
+            message='T&S Demo generics must have exactly one parameter',
             hint=f'generic {kind} type {to_display_str(t)} has {len(generic_params)} parameters',
         )
     (generic_param,) = generic_params

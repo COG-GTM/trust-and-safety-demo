@@ -103,7 +103,7 @@ def upload_dependencies_mapping(
     sources: Sources,
     suppress_warnings: bool = False,
 ) -> bool:
-    """Create a mapping of Osprey Rules/UDFs/variables to their dependencies and upload to BigQuery."""
+    """Create a mapping of T&S Demo Rules/UDFs/variables to their dependencies and upload to BigQuery."""
     # bootstrap validators before instance_with_additional_validators copies the validator registry
     udf_registry, _ = bootstrap_udfs()
     bootstrap_ast_validators()

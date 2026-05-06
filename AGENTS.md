@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Instructions for AI coding agents working on Osprey. `README.md` is for humans; this file is for machines. The nearest `AGENTS.md` to the edited file wins; explicit user prompts override everything.
+Instructions for AI coding agents working on T&S Demo. `README.md` is for humans; this file is for machines. The nearest `AGENTS.md` to the edited file wins; explicit user prompts override everything.
 
 ## Architecture
 
@@ -19,7 +19,7 @@ Reference files: `docs/DEVELOPMENT.md` (setup), `example_plugins/src/register_pl
 ## Design
 
 - API: gRPC between `osprey_coordinator` and workers; HTTP/Flask for `osprey-ui-api` (port 5004); protobuf definitions under `proto/osprey/rpc/` are authoritative.
-- Rules: SML (Osprey's rule language) with user-defined functions registered via pluggy hooks (`@hookimpl_osprey`): `register_udfs`, `register_output_sinks`, `register_labels_service_or_provider`.
+- Rules: SML (T&S Demo's rule language) with user-defined functions registered via pluggy hooks (`@hookimpl_osprey`): `register_udfs`, `register_output_sinks`, `register_labels_service_or_provider`.
 - Data model conventions: Pydantic for models, SQLAlchemy for persistence (versions pinned in `pyproject.toml`).
 
 ## Build and run

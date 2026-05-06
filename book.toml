@@ -1,5 +1,5 @@
 [book]
-title = "Osprey Documentation"
+title = "T&S Demo Documentation"
 authors = ["ROOST"]
 language = "en"
 src = "docs"
@@ -8,8 +8,8 @@ src = "docs"
 build-dir = "book"
 
 [output.html]
-edit-url-template = "https://github.com/roostorg/osprey/edit/main/{path}"
-git-repository-url = "https://github.com/roostorg/osprey"
+edit-url-template = "https://github.com/COG-GTM/trust-and-safety-demo/edit/main/{path}"
+git-repository-url = "https://github.com/COG-GTM/trust-and-safety-demo"
 
 [output.html.print]
 enable = false

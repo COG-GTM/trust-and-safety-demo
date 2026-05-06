@@ -1,6 +1,6 @@
 # Release Process
 
-Osprey uses [Semantic Versioning](https://semver.org/) (SemVer) with a 1.x.y series. This is a lightweight, bootstrap release process so downstream users can depend on version tags instead of commit hashes. The process may evolve as project usage grows.
+T&S Demo uses [Semantic Versioning](https://semver.org/) (SemVer) with a 1.x.y series. This is a lightweight, bootstrap release process so downstream users can depend on version tags instead of commit hashes. The process may evolve as project usage grows.
 
 ## Patch releases (1.x.y)
 
@@ -31,6 +31,6 @@ Before cutting a release:
 Publishing the release triggers existing automation:
 
 - **osprey-rpc**: build and attach sdist (and zip) to the release ([release-osprey-rpc](https://github.com/roostorg/osprey/blob/main/.github/workflows/release-osprey-rpc.yml)).
-- **Osprey Coordinator**: build and push Docker image to GHCR with version tags ([publish-coordinator-image](https://github.com/roostorg/osprey/blob/main/.github/workflows/publish-coordinator-image.yml)).
+- **T&S Demo Coordinator**: build and push Docker image to GHCR with version tags ([publish-coordinator-image](https://github.com/roostorg/osprey/blob/main/.github/workflows/publish-coordinator-image.yml)).
 
 Downstreams can depend on version tags (e.g. `1.0.1`) instead of commit SHAs.

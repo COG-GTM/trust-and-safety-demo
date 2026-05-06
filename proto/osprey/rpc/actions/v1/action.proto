@@ -13,7 +13,7 @@ message Action {
   fixed64 id = 1;
 
   // This oneof denotes the type of action this message is.
-  // Each field name in this this oneof should match the name of an action that Osprey expects.
+  // Each field name in this this oneof should match the name of an action that T&S Demo expects.
   oneof data {
     AuthSessionCreated auth_session_created = 2;
     AuthSessionModified auth_session_modified = 3;

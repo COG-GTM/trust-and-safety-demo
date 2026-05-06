@@ -1,4 +1,4 @@
-# Osprey UI
+# T&S Demo UI
 
 ### Prerequisites
 
@@ -8,15 +8,15 @@
 
 ## Purpose
 
-`osprey_ui` is the frontend repository for the Osprey application.
+`osprey_ui` is the frontend repository for the T&S Demo application.
 For more information on the application as a whole, its features,
-and what it is used for, please refer to the [documentation](https://github.com/roostorg/osprey/tree/main/docs). This is a `create-react-app` project. It uses React/Typescript/Zustand,
+and what it is used for, please refer to the [documentation](../docs). This is a `create-react-app` project. It uses React/Typescript/Zustand,
 [Ant Design 4.0](https://ant.design/) as a UI framework, and CSS Modules.
 
 ### Service Dependencies
 
-- **Osprey UI API** - Main backend API
-- **Osprey Worker** - Rules processing engine
+- **T&S Demo UI API** - Main backend API
+- **T&S Demo Worker** - Rules processing engine
 - **Kafka** - Message streaming
 - **PostgreSQL** - Database
 - **Druid** - Analytics engine
@@ -26,11 +26,11 @@ and what it is used for, please refer to the [documentation](https://github.com/
 1. **Start Backend Services**
 
 ```bash
-# From the osprey project root directory
+# From the project root directory
 docker compose up -d
 ```
 
-This starts all required backend services including Kafka, PostgreSQL, Druid, and the Osprey API.
+This starts all required backend services including Kafka, PostgreSQL, Druid, and the T&S Demo API.
 
 2. **Install Dependencies**
 

@@ -1,12 +1,12 @@
-# Osprey `osprey_ast`
+# T&S Demo `osprey_ast`
 
-Osprey defines a rules language that is used to represent classification and feature extraction of data.
+T&S Demo defines a rules language that is used to represent classification and feature extraction of data.
 
 This package holds the AST nodes and grammars of the language, and bootstraps the parser by leaning on Python's syntax and AST module.
 
 ## Grammar
 
-Osprey's `osprey_ast` defines a very simple language that is python-like, however, much more slimmed down. For example, there are no classes, function definitions, if statements, etc...
+T&S Demo's `osprey_ast` defines a very simple language that is python-like, however, much more slimmed down. For example, there are no classes, function definitions, if statements, etc...
 
 At it's core, we're looking at something quite simple:
 

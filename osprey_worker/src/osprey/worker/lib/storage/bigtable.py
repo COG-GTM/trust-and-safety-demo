@@ -51,7 +51,7 @@ class BigTableClient(ABC):
 
 class OspreyBigTable(BigTableClient):
     """
-    A BigTable client wrapper for the Osprey BigTable instance
+    A BigTable client wrapper for the T&S Demo BigTable instance
     """
 
     def __init__(self) -> None:

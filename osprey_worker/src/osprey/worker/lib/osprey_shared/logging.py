@@ -156,13 +156,13 @@ def get_logger(
 def info_log_osprey_action(action_id: int, action_name: str, message: str):
     """
     Info logging for a percentage of actions based on action id.
-    This method should be synced with the one in Osprey Coordinator.
+    This method should be synced with the one in T&S Demo Coordinator.
 
     """
     # TODO: this method is called in multiple places and just swallows logging
     pass
 
-    # # Edit this if you want to log different actions end-to-end in Osprey
+    # # Edit this if you want to log different actions end-to-end in T&S Demo
     # if action_name != 'guild_member_updated':
     #     return
 

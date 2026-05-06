@@ -90,13 +90,13 @@ def bootstrap_output_sinks(config: Config) -> BaseOutputSink:
 
 def bootstrap_labels_provider(config: Config) -> LabelsProvider:
     """
-    NOTE: If you are looking to get a labels provider to use within Osprey,
+    NOTE: If you are looking to get a labels provider to use within T&S Demo,
     it is best practice to reference the LABELS_PROVIDER singleton in
     `osprey_worker/src/osprey/worker/lib/singletons.py` by calling
     `LABELS_PROVIDER.instance()`
 
     This way, any statefulness that implementers want for `LabelsServiceBase`
-    or `LabelsProvider` will be respected across a given Osprey worker.
+    or `LabelsProvider` will be respected across a given T&S Demo worker.
 
     -
 
