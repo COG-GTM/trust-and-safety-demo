@@ -40,6 +40,18 @@
     {
       "name": "CAN_VIEW_EVENTS_BY_ACTION",
       "allow_all": true
+    },
+    {
+      "name": "CAN_VIEW_DASHBOARDS",
+      "allow_all": true
+    },
+    {
+      "name": "CAN_CREATE_AND_EDIT_DASHBOARDS",
+      "allow_all": true
+    },
+    {
+      "name": "CAN_VIEW_ANALYTICS",
+      "allow_all": true
     }
   ],
   "ability_groups": ["CAN_VIEW_BASIC_USER_DATA"]

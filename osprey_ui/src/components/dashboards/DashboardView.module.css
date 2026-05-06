@@ -1,0 +1,50 @@
+.viewContainer {
+  padding: 16px 24px 32px;
+  max-width: 1480px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.viewHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.titleArea {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.title {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.subtitle {
+  font-size: 12px;
+  color: var(--text-secondary, #535a65);
+}
+
+.headerActions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.switcher {
+  min-width: 220px;
+}
+
+.empty {
+  padding: 64px 16px;
+  text-align: center;
+  border: 1px dashed var(--border-tertiary, #e1e3e6);
+  border-radius: 6px;
+  color: var(--text-secondary, #535a65);
+}

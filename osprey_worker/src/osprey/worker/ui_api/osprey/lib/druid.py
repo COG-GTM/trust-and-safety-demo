@@ -148,7 +148,7 @@ class TimeseriesDruidQuery(BaseDruidQuery):
     granularity: str
     aggregation_dimensions: Optional[List[str]] = None
 
-    def execute(self) -> Any:
+    def execute(self, query_filter_abilities: Sequence[Optional['QueryFilterAbility[Any, Any]']] = ()) -> Any:
         aggregations = {'count': {'type': 'count'}}
 
         if self.aggregation_dimensions and self.entity:
@@ -161,6 +161,7 @@ class TimeseriesDruidQuery(BaseDruidQuery):
             DruidQueryTypes.TIMESERIES,
             granularity=self.granularity,
             aggregations=aggregations,
+            query_filter_abilities=query_filter_abilities,
         )
 
 

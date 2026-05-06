@@ -85,6 +85,9 @@ const NavBar = ({ children }: React.PropsWithChildren) => {
             <Menu.Item key={Routes.RULES_VISUALIZER}>
               <Link to={Routes.RULES_VISUALIZER}>Rules Visualizer</Link>
             </Menu.Item>
+            <Menu.Item key={Routes.DASHBOARDS}>
+              <Link to={Routes.DASHBOARDS}>Dashboards</Link>
+            </Menu.Item>
           </Menu>
         </div>
         {children}

@@ -1,0 +1,23 @@
+.controlsBar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 12px;
+  background: var(--background-secondary, #fafbfc);
+  border: 1px solid var(--border-tertiary, #e1e3e6);
+  border-radius: 6px;
+  margin-bottom: 12px;
+}
+
+.controlsBar .group {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.controlsBar label {
+  font-size: 12px;
+  color: var(--text-secondary, #535a65);
+  white-space: nowrap;
+}
