@@ -67,6 +67,9 @@ const NavBar = ({ children }: React.PropsWithChildren) => {
             mode="inline"
             inlineCollapsed={!showMenu}
           >
+            <Menu.Item key={Routes.DASHBOARD}>
+              <Link to={Routes.DASHBOARD}>Dashboard</Link>
+            </Menu.Item>
             <Menu.Item key={Routes.HOME}>
               <Link to={Routes.HOME}>Home</Link>
             </Menu.Item>
