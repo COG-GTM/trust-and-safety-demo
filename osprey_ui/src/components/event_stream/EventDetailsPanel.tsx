@@ -47,7 +47,7 @@ interface MenuBarProps {
 const MenuBar = ({ onClick, currentTab, storedExecutionResult }: MenuBarProps) => {
   const numErrorTraces = storedExecutionResult.error_traces.length;
   return (
-    <Menu className={styles.__invalid_menu} onClick={onClick} selectedKeys={[currentTab]} mode="horizontal">
+    <Menu onClick={onClick} selectedKeys={[currentTab]} mode="horizontal">
       <Menu.Item key={EventDataTabs.EventDetails} icon={<AimOutlined />}>
         Overview
       </Menu.Item>

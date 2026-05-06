@@ -9,9 +9,10 @@ export const Routes = {
   BULK_JOB_HISTORY: '/bulk-job-history',
   RULES_VISUALIZER: '/rules-visualizer',
   BULK_ACTION: '/bulk-action',
+  DASHBOARD: '/dashboard',
 };
 
-export const DATE_FORMAT = 'M/D/YYYY h:mm:ssa zz';
+export const DATE_FORMAT = 'M/D/YYYY h:mm:ssa z';
 
 // These should mirror the `--status-primary` colors in Colors.module.css
 export const StatusColors = {

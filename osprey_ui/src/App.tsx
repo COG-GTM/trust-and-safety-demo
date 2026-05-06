@@ -23,6 +23,7 @@ import './stores/SearchParamsStateListener';
 import { Routes } from './Constants';
 import styles from './App.module.css';
 import { BulkActionPage } from './components/bulk_actions/BulkActionPage';
+import Dashboard from './components/dashboard/Dashboard';
 
 const AppRouter: React.FC = () => {
   const updateApplicationConfig = useApplicationConfigStore((state) => state.updateApplicationConfig);
@@ -48,6 +49,9 @@ const AppRouter: React.FC = () => {
           <Switch>
             <Route path="/events/:eventId">
               <EventPage />
+            </Route>
+            <Route path={Routes.DASHBOARD}>
+              <Dashboard />
             </Route>
             <Route>
               <NavBar>
