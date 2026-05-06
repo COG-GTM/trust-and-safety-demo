@@ -62,7 +62,11 @@ const DashboardView = () => {
   const { tick: pollTick, force: forcePoll } = useDashboardRefreshTick(editMode ? 0 : refreshSeconds);
 
   const refreshAll = React.useCallback(() => {
-    setWidgetRefreshKeys({});
+    // Bump pollTick (used as a base term in every widget's combined refresh key
+    // at DashboardGrid.tsx) so all widgets re-fetch. Do NOT reset the per-widget
+    // map: combining a reset map with the new pollTick can yield the same
+    // numeric key as before for widgets that were previously refreshed
+    // individually, causing their useEffect to silently skip the refresh.
     forcePoll();
   }, [forcePoll]);
 
