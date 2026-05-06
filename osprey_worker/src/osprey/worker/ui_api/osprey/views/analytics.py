@@ -242,7 +242,18 @@ def labels_summary() -> Any:
 
     recent: List[Dict[str, Any]] = []
     for row in recent_rows:
-        labels_json: Any = row.labels if isinstance(row.labels, dict) else {}
+        # ``EntityLabels.serialize()`` wraps the per-entity label map under a
+        # top-level ``labels`` key (see osprey_shared/labels.py:384), so the
+        # JSONB column shape is ``{"labels": {"<label_name>": {...}}}``. The
+        # ``top_labels`` query above already unwraps with
+        # ``jsonb_object_keys(labels->'labels')``; we apply the same unwrap here
+        # so the frontend's ``Object.keys(row.labels)`` returns the actual
+        # label names instead of the literal ``["labels"]`` wrapper key. Older
+        # rows that may have been written without the wrapper are passed
+        # through unchanged.
+        labels_raw: Any = row.labels if isinstance(row.labels, dict) else {}
+        labels_inner = labels_raw.get('labels') if isinstance(labels_raw, dict) else None
+        labels_json: Any = labels_inner if isinstance(labels_inner, dict) else labels_raw
         recent.append({'entity_key': row.entity_key, 'labels': labels_json})
 
     return jsonify({'total_entities': int(total), 'top_labels': top_labels, 'recent': recent})

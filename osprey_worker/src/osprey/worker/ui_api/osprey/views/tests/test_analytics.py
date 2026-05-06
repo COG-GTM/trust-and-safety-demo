@@ -379,3 +379,82 @@ def test_analytics_labels_summary_returns_empty_when_table_missing(
     assert res.status_code == HTTPStatus.OK, res.data
     body = res.get_json()
     assert body == {'total_entities': 0, 'top_labels': [], 'recent': []}
+
+
+@pytest.mark.use_rules_sources(_ANALYTICS_CONFIG)
+def test_analytics_labels_summary_recent_unwraps_serialized_envelope(
+    app: Flask,
+    client: 'FlaskClient[Response]',
+) -> None:
+    """``EntityLabels.serialize()`` writes the JSONB column as
+    ``{"labels": {"<label_name>": {...}}}``. The ``recent`` payload must
+    unwrap the outer ``labels`` key so the frontend (which calls
+    ``Object.keys(row.labels)``) sees the actual label names — otherwise it
+    would render every row as a single ``"labels"`` tag instead of the real
+    label set. ``top_labels`` already unwraps via
+    ``jsonb_object_keys(labels->'labels')``; this test pins the parallel
+    behavior on the recent-rows code path."""
+
+    class _FakeRow:
+        def __init__(self, **kwargs: Any) -> None:
+            for k, v in kwargs.items():
+                setattr(self, k, v)
+
+    serialized_envelope = {
+        'labels': {
+            'spam': {'state': 'ADDED', 'reason': 'Triggered by rule.', 'expiry': None},
+            'verified': {'state': 'ADDED', 'reason': 'Manual.', 'expiry': None},
+        }
+    }
+    legacy_unwrapped = {
+        'manual_review': {'state': 'ADDED'},
+    }
+
+    top_labels_rows = [
+        _FakeRow(label_name='spam', cnt=2),
+        _FakeRow(label_name='verified', cnt=1),
+    ]
+    recent_rows = [
+        _FakeRow(entity_key='User:1', labels=serialized_envelope),
+        _FakeRow(entity_key='User:2', labels=legacy_unwrapped),
+    ]
+
+    fake_session = mock.MagicMock()
+
+    def execute_side_effect(query: Any, params: Any = None) -> Any:
+        sql = str(query).strip()
+        result = mock.MagicMock()
+        if 'to_regclass' in sql:
+            result.scalar.return_value = True
+        elif 'COUNT(*) FROM entity_labels' in sql:
+            result.scalar.return_value = 5
+        elif 'jsonb_object_keys' in sql:
+            result.fetchall.return_value = top_labels_rows
+        else:
+            result.fetchall.return_value = recent_rows
+        return result
+
+    fake_session.execute.side_effect = execute_side_effect
+
+    @mock.patch('osprey.worker.lib.storage.postgres.scoped_session')
+    def _run(scoped: Any) -> Any:
+        scoped.return_value.__enter__.return_value = fake_session
+        scoped.return_value.__exit__.return_value = False
+        return client.get(url_for('analytics.labels_summary'))
+
+    res = _run()
+    assert res.status_code == HTTPStatus.OK, res.data
+    body = res.get_json()
+    assert body['total_entities'] == 5
+    assert body['top_labels'] == [
+        {'label_name': 'spam', 'count': 2},
+        {'label_name': 'verified', 'count': 1},
+    ]
+    # First row: the serialized envelope must be unwrapped so the frontend
+    # gets ``{"spam": ..., "verified": ...}`` (Object.keys → label names),
+    # not the literal ``{"labels": {...}}`` wrapper.
+    assert body['recent'][0]['entity_key'] == 'User:1'
+    assert set(body['recent'][0]['labels'].keys()) == {'spam', 'verified'}
+    # Second row: legacy/unwrapped shape passes through unchanged.
+    assert body['recent'][1]['entity_key'] == 'User:2'
+    assert set(body['recent'][1]['labels'].keys()) == {'manual_review'}
