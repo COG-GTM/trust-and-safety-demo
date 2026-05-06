@@ -126,11 +126,50 @@ services:
       - OSPREY_MINIO_EXECUTION_RESULTS_BUCKET=execution-output
       - SNOWFLAKE_API_ENDPOINT=http://snowflake-id-worker:8088
       - OSPREY_RULES_PATH=./example_rules
+      - OSPREY_DASHBOARD_METRICS_SINK=true
     volumes:
       - ./osprey_worker:/osprey/osprey_worker
       - ./osprey_rpc:/osprey/osprey_rpc
       - ./example_rules:/osprey/example_rules
       - ./entrypoint.sh:/osprey/entrypoint.sh
+
+  dashboard-backend:
+    container_name: dashboard-backend
+    hostname: dashboard-backend
+    build:
+      context: ./dashboard/backend
+      dockerfile: Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      - LOG_LEVEL=INFO
+      - DATABASE_URL=postgresql://osprey:FoolishPassword@postgres:5432/osprey
+      - OSPREY_EXECUTION_RESULT_STORAGE_BACKEND=minio
+      - OSPREY_MINIO_ENDPOINT=minio:9000
+      - OSPREY_MINIO_ACCESS_KEY=minioadmin
+      - OSPREY_MINIO_SECRET_KEY=minioadmin123
+      - OSPREY_MINIO_SECURE=false
+      - OSPREY_MINIO_EXECUTION_RESULTS_BUCKET=execution-output
+      - DRUID_URL=http://druid-broker:8082
+
+  dashboard-frontend:
+    container_name: dashboard-frontend
+    hostname: dashboard-frontend
+    build:
+      context: ./dashboard/frontend
+      dockerfile: Dockerfile
+    depends_on:
+      - dashboard-backend
+    ports:
+      - "127.0.0.1:3001:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8080
+      - DASHBOARD_API_INTERNAL=http://dashboard-backend:8080
 
   osprey-ui-api:
     container_name: osprey-ui-api

@@ -2,7 +2,7 @@ import logging
 import os
 from dataclasses import dataclass
 from random import randint
-from typing import Optional
+from typing import List, Optional, Set
 
 import gevent
 import sentry_sdk
@@ -10,6 +10,8 @@ from ddtrace import tracer
 from ddtrace.span import Span as TracerSpan
 from osprey.engine.executor.execution_context import Action, ExecutionResult
 from osprey.engine.executor.udf_execution_helpers import UDFHelpers
+from osprey.engine.language_types.effects import EffectBase
+from osprey.engine.language_types.verdicts import VerdictEffect
 from osprey.engine.utils.types import add_slots
 from osprey.worker.lib.instruments import metrics
 from osprey.worker.lib.osprey_engine import OspreyEngine
@@ -25,6 +27,44 @@ from ..utils.envoy_status import get_envoy_check_server
 from .base_sink import BaseSink
 from .input_stream import BaseInputStream
 from .output_sink import BaseOutputSink
+
+_ALLOW_VERDICTS = {'allow', 'noop', 'none'}
+
+
+def _emit_dashboard_metrics(result: ExecutionResult, base_tags: List[str]) -> None:
+    """Emit per-event metrics that the dashboard backend can roll up.
+
+    Tags include action name and rules hash from the caller's ``base_tags``.
+    Failures are swallowed so the metrics emit never breaks the pipeline.
+    """
+    try:
+        verdicts = [v.verdict for v in result.verdicts]
+        is_flagged = bool(result.effects) or any(v.lower() not in _ALLOW_VERDICTS for v in verdicts)
+
+        if is_flagged:
+            metrics.increment('flagged_event', tags=base_tags)
+
+        for verdict in verdicts:
+            verdict_tag = verdict.lower().replace(' ', '_')
+            metrics.increment(f'verdict.{verdict_tag}', tags=base_tags)
+
+        for effect_type, effect_list in result.effects.items():
+            if not effect_list or effect_type is VerdictEffect:
+                continue
+            metrics.increment(f'effect.{effect_type.__name__}', tags=base_tags)
+
+        seen_rules: Set[str] = set()
+        for effect_list in result.effects.values():
+            for effect in effect_list:
+                if not isinstance(effect, EffectBase):
+                    continue
+                for rule in effect.rules:
+                    if rule.value and rule.name not in seen_rules:
+                        seen_rules.add(rule.name)
+                        metrics.increment('rule_matched', tags=[*base_tags, f'rule:{rule.name}'])
+    except Exception:
+        # Metrics are best-effort; never let them break the pipeline.
+        sentry_sdk.capture_exception()
 
 
 @add_slots
@@ -112,6 +152,7 @@ class RulesRunner:
             with metrics.timed('handled_output', tags=tags, use_ms=True):
                 self._output_sink.push(result)
                 info_log_osprey_action(action.action_id, action.action_name, 'pushed to output sink')
+                _emit_dashboard_metrics(result, tags)
                 return result
         except BaseException:
             sentry_sdk.capture_exception()

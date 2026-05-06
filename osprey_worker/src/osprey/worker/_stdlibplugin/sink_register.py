@@ -1,3 +1,4 @@
+import os
 from typing import List, Sequence
 
 from kafka import KafkaProducer
@@ -5,6 +6,7 @@ from osprey.worker._stdlibplugin.execution_result_store_chooser import get_rules
 from osprey.worker.adaptor.plugin_manager import hookimpl_osprey
 from osprey.worker.lib.config import Config
 from osprey.worker.lib.storage import ExecutionResultStorageBackendType
+from osprey.worker.sinks.sink.dashboard_metrics_sink import build_dashboard_metrics_sink_from_env
 from osprey.worker.sinks.sink.kafka_output_sink import KafkaOutputSink
 from osprey.worker.sinks.sink.output_sink import BaseOutputSink, StdoutOutputSink
 from osprey.worker.sinks.sink.stored_execution_result_output_sink import StoredExecutionResultOutputSink
@@ -34,5 +36,10 @@ def register_output_sinks(config: Config) -> Sequence[BaseOutputSink]:
     # There may not be an execution result store configured, so check before adding the output sink
     if storage_backend is not None:
         sinks.append(StoredExecutionResultOutputSink())
+
+    if config.get_bool('OSPREY_DASHBOARD_METRICS_SINK', False):
+        dashboard_sink = build_dashboard_metrics_sink_from_env(os.environ.get('POSTGRES_HOSTS'))
+        if dashboard_sink is not None:
+            sinks.append(dashboard_sink)
 
     return sinks

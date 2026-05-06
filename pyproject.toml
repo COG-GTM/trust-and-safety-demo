@@ -271,6 +271,8 @@ exclude = [
     ".*_pb2_grpc\\.py$",
     ".*/tests/.*",
     ".*/test_.*\\.py$",
+    # Dashboard backend is its own project with isolated deps (see dashboard/backend/requirements.txt)
+    "^dashboard/.*",
 ]
 
 # required until pydantic explicitly exports Extra
