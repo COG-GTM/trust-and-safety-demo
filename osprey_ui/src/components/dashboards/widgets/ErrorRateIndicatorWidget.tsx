@@ -15,13 +15,14 @@ interface Props {
 const ErrorRateIndicatorWidget = ({ widget, ctx }: Props) => {
   const [points, setPoints] = React.useState<AnalyticsTimeseriesPoint[] | null>(null);
   const granularity = widget.dataSource.granularity ?? 'hour';
-  // ctx.queryFilter already merges the dashboard global filter with the
-  // widget's own dataSource.queryFilter (see buildWidgetContext). If the user
-  // hasn't configured a widget filter, fall back to the standard error filter.
-  const widgetFilter = widget.dataSource.queryFilter?.trim();
-  const effectiveFilter = widgetFilter
-    ? ctx.queryFilter
-    : [ctx.queryFilter, 'HasError = true'].filter(Boolean).join(' AND ');
+  // The Error Rate widget is, by definition, scoped to errors. Always intersect
+  // the merged context filter with HasError = true so that user-supplied filters
+  // (e.g. ActionName = "post") narrow the error population rather than replacing
+  // it. ctx.queryFilter is wrapped in parens by buildWidgetContext when needed,
+  // so 'HasError = true' is safely AND'd as a sibling clause.
+  const errorClause = 'HasError = true';
+  const trimmedCtx = ctx.queryFilter.trim();
+  const effectiveFilter = trimmedCtx ? `${trimmedCtx} AND ${errorClause}` : errorClause;
 
   React.useEffect(() => {
     let cancelled = false;

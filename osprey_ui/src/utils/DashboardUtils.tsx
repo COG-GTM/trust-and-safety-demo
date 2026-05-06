@@ -133,7 +133,9 @@ export function defaultDataSourceForType(type: DashboardWidgetType) {
     case DashboardWidgetTypes.LABEL_ACTIVITY_TABLE:
       return { limit: 25 };
     case DashboardWidgetTypes.ERROR_RATE_INDICATOR:
-      return { granularity: 'hour', queryFilter: 'HasError = true' };
+      // The widget unconditionally enforces HasError = true; this filter slot
+      // is for additional user-supplied scoping (e.g. by ActionName).
+      return { granularity: 'hour', queryFilter: '' };
     case DashboardWidgetTypes.TOP_ENTITIES_TABLE:
       return { dimension: 'EntityKey', limit: 25, queryFilter: '' };
     case DashboardWidgetTypes.HEATMAP_CALENDAR:

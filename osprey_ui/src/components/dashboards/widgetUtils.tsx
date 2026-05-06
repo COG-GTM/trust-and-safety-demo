@@ -27,7 +27,11 @@ export function buildWidgetContext(
   const resolved = resolveTimeRange(tr);
   const widgetFilter = widget.dataSource.queryFilter?.trim();
   const globalFilter = layout.globalQueryFilter?.trim();
-  const queryFilter = [globalFilter, widgetFilter].filter(Boolean).join(' AND ');
+  const parts = [globalFilter, widgetFilter].filter((p): p is string => Boolean(p));
+  // When combining multiple filter expressions with AND, wrap each in parens so
+  // that any internal OR clauses keep their intended grouping. Single filters
+  // are emitted verbatim to keep the SML output readable.
+  const queryFilter = parts.length > 1 ? parts.map((p) => `(${p})`).join(' AND ') : (parts[0] ?? '');
   return {
     start: resolved.startISO,
     end: resolved.endISO,

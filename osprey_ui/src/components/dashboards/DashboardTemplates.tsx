@@ -81,7 +81,7 @@ export const DASHBOARD_TEMPLATES: DashboardTemplate[] = [
         widget(
           'ERROR_RATE_INDICATOR',
           { x: 0, y: 6, w: 4, h: 3 },
-          { title: 'Rule errors', dataSource: { granularity: 'hour', queryFilter: 'HasError = true' } }
+          { title: 'Rule errors', dataSource: { granularity: 'hour' } }
         ),
       ]),
   },
