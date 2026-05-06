@@ -13,6 +13,7 @@ import QueryHistory from './components/query_history/QueryHistory';
 import QueryView from './components/query_view/QueryView';
 import SavedQueries from './components/saved_queries/SavedQueries';
 import SavedQueryBar from './components/saved_queries/SavedQueryBar';
+import Dashboard from './pages/Dashboard';
 import usePromiseResult from './hooks/usePromiseResult';
 import useApplicationConfigStore from './stores/ApplicationConfigStore';
 import { history } from './stores/QueryStore';
@@ -72,6 +73,9 @@ const AppRouter: React.FC = () => {
                   </Route>
                   <Route path={Routes.RULES_VISUALIZER}>
                     <RulesVisualizerView />
+                  </Route>
+                  <Route path={Routes.DASHBOARD}>
+                    <Dashboard />
                   </Route>
                   <Route exact path={[Routes.ENTITY, Routes.HOME, Routes.SAVED_QUERY]}>
                     <QueryView />
