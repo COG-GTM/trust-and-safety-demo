@@ -17,6 +17,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 
 from flask import Blueprint, abort, jsonify
+from osprey.worker.lib.singletons import ENGINE
 from osprey.worker.ui_api.osprey.lib.abilities import (
     CanViewEventsByEntity,
     require_ability,
@@ -742,6 +743,7 @@ def dashboard_recent_alerts(request_model: RecentAlertsRequest) -> Any:
 
 
 @blueprint.route('/entity/<entity_type>/<entity_id>/profile', methods=['GET'])
+@require_ability(CanViewEventsByEntity)
 def entity_profile(entity_type: str, entity_id: str) -> Any:
     """Return a compact profile for an entity used by the Entity Investigation panel.
 
@@ -826,8 +828,18 @@ def entity_profile(entity_type: str, entity_id: str) -> Any:
 
     # Related entities: pull a few recent rows for this entity and surface any
     # entity-typed values we observe (UserId, EventType, ActionName, etc.).
+    # We exclude the columns that map to the queried entity's own type so the
+    # entity never appears in its own "related" list.
     related_entities: Dict[str, List[str]] = {}
     try:
+        try:
+            feature_mapping = ENGINE.instance().get_feature_name_to_entity_type_mapping()
+        except Exception:
+            feature_mapping = {}
+        own_columns = {
+            feature_name for feature_name, mapped_type in feature_mapping.items() if mapped_type == entity_type
+        }
+
         scan_rows = _build_query(
             DruidQueryTypes.SCAN,
             start,
@@ -846,8 +858,13 @@ def entity_profile(entity_type: str, entity_id: str) -> Any:
                     values = dict(zip(columns, event_row))
                     for key in ('UserId', 'ActionName', 'EventType'):
                         v = values.get(key)
-                        if v and (key != entity_type or str(v) != str(entity_id)):
-                            related_buckets.setdefault(key, set()).add(str(v))
+                        if not v:
+                            continue
+                        # Skip the queried entity's own value when surfacing on
+                        # one of its own feature columns.
+                        if key in own_columns and str(v) == str(entity_id):
+                            continue
+                        related_buckets.setdefault(key, set()).add(str(v))
         related_entities = {k: sorted(v)[:10] for k, v in related_buckets.items()}
     except Exception:
         logger.warning('Failed to load related entities for %s/%s', entity_type, entity_id, exc_info=True)
