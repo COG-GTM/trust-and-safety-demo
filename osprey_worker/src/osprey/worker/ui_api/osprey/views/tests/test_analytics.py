@@ -61,6 +61,34 @@ _ACTION_RESTRICTED_CONFIG: Dict[str, Any] = {
 }
 
 
+# Regression for the dashboard widget case: entity=null queries must work even
+# when the user only has entity-scoped CanViewEventsByEntity (allow_specific).
+# CanViewEventsByEntity._request_is_allowed returns False for null entity, so
+# without the ``if entity is not None`` guard in analytics.py these endpoints
+# would 401 every dashboard widget for any non-allow_all entity ACL.
+_ENTITY_RESTRICTED_CONFIG: Dict[str, Any] = {
+    'main.sml': '',
+    'config.yaml': json.dumps(
+        {
+            'acl': {
+                'users': {
+                    'local-dev@localhost': {
+                        'abilities': [
+                            {'name': 'CAN_VIEW_ANALYTICS', 'allow_all': True},
+                            {
+                                'name': 'CAN_VIEW_EVENTS_BY_ENTITY',
+                                'allow_specific': [{'type': 'User', 'id': '42'}],
+                            },
+                            {'name': 'CAN_VIEW_EVENTS_BY_ACTION', 'allow_all': True},
+                        ]
+                    }
+                }
+            }
+        }
+    ),
+}
+
+
 @pytest.fixture(name='fake_druid')
 def fake_druid_fixture() -> Any:
     druid = mock.MagicMock()
@@ -279,6 +307,54 @@ def test_execution_results_applies_can_view_events_by_action_filter(
     assert res.status_code == HTTPStatus.OK, res.data
     args, _ = fake_druid.client._post.call_args
     assert _extract_action_filter_values(args[0].query_dict) == ['post_created']
+
+
+@pytest.mark.use_rules_sources(_ENTITY_RESTRICTED_CONFIG)
+def test_timeseries_allows_null_entity_for_entity_restricted_user(
+    app: Flask,
+    client: 'FlaskClient[Response]',
+    mock_druid_client: Any,
+    fake_druid: Any,
+) -> None:
+    """Regression: dashboard widgets always send entity=null. A user with
+    ``CAN_VIEW_EVENTS_BY_ENTITY: allow_specific=[...]`` (i.e. entity-scoped, not
+    ``allow_all``) must still be able to query ``/analytics/timeseries`` with a
+    null entity. ``CanViewEventsByEntity._request_is_allowed`` returns False for
+    null entities, so this only works when the analytics endpoint skips the
+    entity check for null-entity queries."""
+    query = Query(query_dict={}, query_type='osprey.execution_results')  # type: ignore
+    query.result_json = '[]'
+    fake_druid.client._post.return_value = query
+
+    res = client.post(
+        url_for('analytics.timeseries'),
+        data=TimeseriesDruidQuery(granularity='hour', **_base_kwargs()).json(),
+        content_type='application/json',
+    )
+
+    assert res.status_code == HTTPStatus.OK, res.data
+
+
+@pytest.mark.use_rules_sources(_ENTITY_RESTRICTED_CONFIG)
+def test_groupby_allows_null_entity_for_entity_restricted_user(
+    app: Flask,
+    client: 'FlaskClient[Response]',
+    mock_druid_client: Any,
+    fake_druid: Any,
+) -> None:
+    """Regression for ``/analytics/groupby``; same rationale as the timeseries
+    test above."""
+    query = Query(query_dict={}, query_type='osprey.execution_results')  # type: ignore
+    query.result_json = '[]'
+    fake_druid.client._post.return_value = query
+
+    res = client.post(
+        url_for('analytics.groupby_dimension'),
+        data=TopNDruidQuery(dimension='Verdict', limit=10, **_base_kwargs()).json(),
+        content_type='application/json',
+    )
+
+    assert res.status_code == HTTPStatus.OK, res.data
 
 
 @pytest.mark.use_rules_sources(_ANALYTICS_CONFIG)

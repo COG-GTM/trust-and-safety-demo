@@ -66,7 +66,12 @@ def timeseries(request_model: TimeseriesDruidQuery) -> Any:
     ``granularity`` and an optional ``entity``. ``query_filter`` is the existing
     SML query language; pass an empty string for "all events".
     """
-    require_ability_with_request(request_model, CanViewEventsByEntity)
+    # CanViewEventsByEntity._request_is_allowed returns False for null-entity
+    # queries, so only enforce the entity check when the caller is actually
+    # entity-scoping. Dashboard widgets always send entity=null and rely on
+    # CanViewAnalytics + CanViewEventsByAction (below) for authorization.
+    if request_model.entity is not None:
+        require_ability_with_request(request_model, CanViewEventsByEntity)
     # Honor CanViewEventsByAction: scope Druid filter to actions the caller is permitted to see.
     query_filter_ability = get_current_user().get_ability(CanViewEventsByAction)
     if query_filter_ability:
@@ -83,8 +88,10 @@ def groupby_dimension(request_model: TopNDruidQuery) -> Any:
     Reuses :class:`TopNDruidQuery`; supports period-over-period comparison via the
     same response shape as ``/api/events/topn``.
     """
-    require_ability_with_request(request_model, CanViewEventsByEntity)
-    require_ability_with_request(request_model, CanViewEventsByAction)
+    # Same rationale as ``timeseries``: only enforce the entity check when the
+    # caller is entity-scoping; dashboard widgets always send entity=null.
+    if request_model.entity is not None:
+        require_ability_with_request(request_model, CanViewEventsByEntity)
     query_filter_ability = get_current_user().get_ability(CanViewEventsByAction)
 
     if query_filter_ability:
