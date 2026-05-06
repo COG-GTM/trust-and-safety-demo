@@ -55,6 +55,8 @@ def main():
     # Generate events spread over the time window
     now = datetime.now(timezone.utc)
     start_time = now - timedelta(hours=args.spread_hours)
+    if args.count <= 0:
+        parser.error('--count must be a positive integer')
     interval = timedelta(hours=args.spread_hours) / args.count
 
     events = []
