@@ -167,12 +167,17 @@ function computeDashboardMetrics(events: OspreyEvent[]): Omit<DashboardData, 'ti
   return { kpis, hourlyBuckets, topFlaggedUsers, flaggedEvents: flaggedEventsList, actionBreakdown };
 }
 
+const MAX_EVENTS = 5000;
+const MAX_PAGES = 50;
+
 export function useDashboardData(): DashboardData {
   const [events, setEvents] = useState<OspreyEvent[]>([]);
   const [timeseries, setTimeseries] = useState<TimeseriesPoint[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
+
     const fetchData = async () => {
       setIsLoading(true);
       const now = dayjs.utc();
@@ -182,31 +187,35 @@ export function useDashboardData(): DashboardData {
       const baseQuery = { start, end, queryFilter: '', interval: 'day' as const };
 
       try {
-        // Fetch timeseries
         const tsData = await getTimeseriesQueryResults(baseQuery, 'hour');
+        if (cancelled) return;
         setTimeseries(tsData.map((p) => ({ timestamp: p.timestamp, count: p.result.count })));
 
-        // Fetch all events (paginate through)
         const allEvents: OspreyEvent[] = [];
         let offset: string | null = null;
-        let hasMore = true;
+        let pages = 0;
 
-        while (hasMore) {
+        while (pages < MAX_PAGES && allEvents.length < MAX_EVENTS) {
           const result = await getScanQueryResults(baseQuery, ScanQueryOrder.DESCENDING, 100, offset);
+          if (cancelled) return;
           allEvents.push(...result.events);
           offset = result.offset;
-          hasMore = result.offset != null && result.events.length > 0;
+          pages++;
+          if (result.offset == null || result.events.length === 0) break;
         }
 
-        setEvents(allEvents);
+        if (!cancelled) setEvents(allEvents);
       } catch {
         // If API fails, we'll show empty state
       } finally {
-        setIsLoading(false);
+        if (!cancelled) setIsLoading(false);
       }
     };
 
     fetchData();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const metrics = useMemo(() => computeDashboardMetrics(events), [events]);
