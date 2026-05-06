@@ -5,12 +5,12 @@
 #
 # Usage:
 #   From repo:  ./demo.sh
-#   Standalone: curl -sSL https://raw.githubusercontent.com/roostorg/osprey/main/demo.sh | bash
+#   Standalone: curl -sSL https://raw.githubusercontent.com/COG-GTM/trust-and-safety-demo/main/demo.sh | bash
 
 set -e
 
-REPO_URL="https://github.com/roostorg/osprey.git"
-DEMO_DIR="osprey-demo"
+REPO_URL="https://github.com/COG-GTM/trust-and-safety-demo.git"
+DEMO_DIR="ts-demo"
 COMPOSE_FILE="docker-compose.yaml"
 
 # Colors for output
