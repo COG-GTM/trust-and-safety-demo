@@ -9,6 +9,7 @@ Also saves the generated input events to example_data/sample_actions.json.
 
 import argparse
 import json
+import math
 import pathlib
 import random
 from datetime import datetime, timedelta, timezone
@@ -439,8 +440,19 @@ def _get_user() -> tuple[str, str]:
 
 def generate_action(action_id: int, timestamp: datetime) -> dict[str, Any]:
     """Generate a single realistic action event."""
-    # 70% posts, 30% logins (realistic ratio)
-    is_post = random.random() < 0.7
+    hour = timestamp.hour
+
+    # Login ratio varies by time: higher in morning (people signing in), lower at night
+    if hour < 6:
+        login_chance = 0.15
+    elif hour < 10:
+        login_chance = 0.45  # morning login surge
+    elif hour < 14:
+        login_chance = 0.25
+    else:
+        login_chance = 0.20
+
+    is_post = random.random() >= login_chance
     action_name = 'create_post' if is_post else 'login'
     user_id, ip_address = _get_user()
 
@@ -451,11 +463,24 @@ def generate_action(action_id: int, timestamp: datetime) -> dict[str, Any]:
     }
 
     if is_post:
-        # ~15% of posts contain "hello" to trigger the T&S rule
-        if random.random() < 0.15:
-            text = _fill_template(random.choice(POST_TEMPLATES_HELLO))
+        # Hello rate: higher for new-ish accounts, varies 5-20%
+        hello_rate = 0.10 + 0.10 * (hash(user_id) % 100) / 100
+        trending = _pick_trending_context()
+
+        if random.random() < hello_rate:
+            template = random.choice(POST_TEMPLATES_HELLO)
         else:
-            text = _fill_template(random.choice(POST_TEMPLATES_NORMAL))
+            # If there's a trending topic, bias toward templates that use it
+            if trending.get('_trending') == 'location':
+                location_templates = [t for t in POST_TEMPLATES_NORMAL if '{location}' in t]
+                template = random.choice(location_templates or POST_TEMPLATES_NORMAL)
+            elif trending.get('_trending') == 'show':
+                show_templates = [t for t in POST_TEMPLATES_NORMAL if '{show}' in t]
+                template = random.choice(show_templates or POST_TEMPLATES_NORMAL)
+            else:
+                template = random.choice(POST_TEMPLATES_NORMAL)
+
+        text = _fill_template(template)
         data['post'] = {'text': text}
 
     return {
@@ -468,24 +493,144 @@ def generate_action(action_id: int, timestamp: datetime) -> dict[str, Any]:
     }
 
 
-def _add_traffic_spikes(base_count: int, spread_hours: int) -> list[float]:
-    """Generate per-event weights to simulate realistic traffic patterns.
+def _generate_timestamps(count: int, spread_hours: int, start_time: datetime) -> list[datetime]:
+    """Generate timestamps with realistic, bursty human-like traffic patterns.
 
-    Creates a diurnal pattern with peaks at 9am, 12pm, and 8pm UTC,
-    plus random micro-bursts simulating viral moments.
+    Models multiple overlapping effects:
+    - Diurnal cycle with asymmetric rise/fall (fast morning ramp, slow evening decay)
+    - Random viral spikes (3-8 per day, each lasting 5-30 minutes)
+    - Dead zones (2am-5am near zero traffic)
+    - Per-event jitter (Poisson-like inter-arrival times within each hour)
+    - Weekend vs weekday variation if spread > 24h
     """
-    weights: list[float] = []
-    for i in range(base_count):
-        hour_of_day = (i * spread_hours / base_count) % 24
-        # Diurnal curve: low at night, peaks during day
-        diurnal = 0.3 + 0.7 * max(
-            0,
-            1 - abs(hour_of_day - 12) / 8,  # broad daytime peak
-        )
-        # Add some randomness
-        noise = random.uniform(0.7, 1.3)
-        weights.append(diurnal * noise)
-    return weights
+    # Step 1: Build a per-minute rate curve (not per-event — decouples count from shape)
+    total_minutes = spread_hours * 60
+    rates: list[float] = []
+
+    # Pre-compute 3-8 viral spike windows
+    num_spikes = random.randint(3, 8)
+    spikes: list[tuple[float, float, float]] = []  # (center_min, half_width_min, intensity)
+    for _ in range(num_spikes):
+        center = random.uniform(0, total_minutes)
+        half_width = random.uniform(2.5, 15.0)  # 5-30 min spikes
+        intensity = random.uniform(2.0, 8.0)
+        spikes.append((center, half_width, intensity))
+
+    for m in range(total_minutes):
+        abs_time = start_time + timedelta(minutes=m)
+        hour_of_day = abs_time.hour + abs_time.minute / 60.0
+        day_of_week = abs_time.weekday()  # 0=Mon, 6=Sun
+
+        # Diurnal: asymmetric with fast morning ramp, broad afternoon plateau, slow decay
+        if hour_of_day < 3:
+            diurnal = 0.02 + 0.03 * hour_of_day / 3  # near-dead: 2-5%
+        elif hour_of_day < 6:
+            diurnal = 0.05 + 0.15 * (hour_of_day - 3) / 3  # slow wake-up: 5-20%
+        elif hour_of_day < 9:
+            diurnal = 0.20 + 0.60 * (hour_of_day - 6) / 3  # morning ramp: 20-80%
+        elif hour_of_day < 13:
+            diurnal = 0.80 + 0.20 * math.sin((hour_of_day - 9) / 4 * math.pi)  # plateau: 80-100%
+        elif hour_of_day < 15:
+            diurnal = 0.85 + 0.10 * random.random()  # post-lunch dip recovery
+        elif hour_of_day < 21:
+            diurnal = 0.95 - 0.35 * (hour_of_day - 15) / 6  # slow evening decay: 95-60%
+        elif hour_of_day < 23:
+            diurnal = 0.60 - 0.40 * (hour_of_day - 21) / 2  # night dropoff: 60-20%
+        else:
+            diurnal = 0.20 - 0.15 * (hour_of_day - 23)  # late night: 20-5%
+
+        # Weekend modifier: ~30% less traffic on weekends, shifted later
+        if day_of_week >= 5:
+            diurnal *= 0.7
+            # Weekend peaks shift ~2h later
+            if 8 < hour_of_day < 12:
+                diurnal *= 0.6  # slower weekend mornings
+
+        # Add viral spikes (Gaussian bumps)
+        spike_boost = 0.0
+        for center, half_width, intensity in spikes:
+            dist = abs(m - center)
+            if dist < half_width * 3:  # only compute near the spike
+                spike_boost += intensity * math.exp(-0.5 * (dist / half_width) ** 2)
+
+        # Per-minute noise: multiplicative log-normal-ish jitter
+        noise = math.exp(random.gauss(0, 0.4))
+
+        rate = max(0.001, diurnal * noise + spike_boost * random.uniform(0.5, 1.5))
+        rates.append(rate)
+
+    # Step 2: Sample `count` timestamps proportional to the rate curve
+    total_rate = sum(rates)
+    timestamps: list[datetime] = []
+    for m, rate in enumerate(rates):
+        # Expected events in this minute
+        expected = count * rate / total_rate
+        # Poisson sampling: actual events this minute
+        n_events = _poisson_sample(expected)
+        for _ in range(n_events):
+            # Uniform jitter within the minute
+            offset_sec = m * 60 + random.uniform(0, 60)
+            timestamps.append(start_time + timedelta(seconds=offset_sec))
+
+    # Trim or pad to exact count
+    random.shuffle(timestamps)
+    if len(timestamps) > count:
+        timestamps = timestamps[:count]
+    while len(timestamps) < count:
+        # Fill gaps by sampling from the rate distribution
+        m = random.choices(range(total_minutes), weights=rates, k=1)[0]
+        offset_sec = m * 60 + random.uniform(0, 60)
+        timestamps.append(start_time + timedelta(seconds=offset_sec))
+
+    timestamps.sort()
+    return timestamps
+
+
+def _poisson_sample(lam: float) -> int:
+    """Sample from Poisson distribution using inverse transform."""
+    if lam <= 0:
+        return 0
+    if lam > 30:
+        # For large lambda, use normal approximation
+        return max(0, int(random.gauss(lam, math.sqrt(lam)) + 0.5))
+    l_val = math.exp(-lam)
+    k = 0
+    p = 1.0
+    while True:
+        k += 1
+        p *= random.random()
+        if p < l_val:
+            return k - 1
+
+
+# --- Trending topic / location clustering ---
+
+_CURRENT_TRENDING: dict[str, Any] = {}
+
+
+def _pick_trending_context() -> dict[str, str]:
+    """Occasionally cluster posts around a trending topic or location."""
+    global _CURRENT_TRENDING  # noqa: PLW0603
+    # 20% chance a post is part of a trending cluster
+    if random.random() < 0.2 and _CURRENT_TRENDING:
+        return dict(_CURRENT_TRENDING)
+    # 3% chance to start a new trend
+    if random.random() < 0.03:
+        trend_type = random.choice(['location', 'show', 'topic'])
+        if trend_type == 'location':
+            loc = random.choice(LOCATIONS)
+            _CURRENT_TRENDING = {'_trending': 'location', 'location': loc}
+        elif trend_type == 'show':
+            show = random.choice(SHOWS)
+            _CURRENT_TRENDING = {'_trending': 'show', 'show': show}
+        else:
+            topic = random.choice(TOPICS)
+            _CURRENT_TRENDING = {'_trending': 'topic', 'topic': topic}
+        return dict(_CURRENT_TRENDING)
+    # 5% chance to end current trend
+    if random.random() < 0.05:
+        _CURRENT_TRENDING = {}
+    return {}
 
 
 def main() -> None:
@@ -505,15 +650,7 @@ def main() -> None:
     now = datetime.now(timezone.utc)
     start_time = now - timedelta(hours=args.spread_hours)
 
-    # Generate timestamps with realistic traffic distribution
-    weights = _add_traffic_spikes(args.count, args.spread_hours)
-    total_weight = sum(weights)
-    cumulative = 0.0
-    timestamps: list[datetime] = []
-    for w in weights:
-        frac = cumulative / total_weight
-        timestamps.append(start_time + timedelta(hours=args.spread_hours) * frac)
-        cumulative += w
+    timestamps = _generate_timestamps(args.count, args.spread_hours, start_time)
 
     events = []
     for i, ts in enumerate(timestamps):
