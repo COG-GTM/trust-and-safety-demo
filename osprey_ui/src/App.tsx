@@ -6,11 +6,13 @@ import { getApplicationConfig } from './actions/ConfigActions';
 import UdfDocsView from './components/docs/UdfDocsView';
 import BulkJobHistoryView from './components/bulk_job_history/BulkJobHistory';
 import RulesVisualizerView from './components/rules_visualizer/RulesVisualizer';
+import Dashboard from './components/dashboard/Dashboard';
 import EntityViewBar from './components/entities/EntityViewBar';
 import EventPage from './components/event_stream/EventPage';
 import NavBar from './components/navigation/NavBar';
 import QueryHistory from './components/query_history/QueryHistory';
 import QueryView from './components/query_view/QueryView';
+import RulePerformance from './components/rule_performance/RulePerformance';
 import SavedQueries from './components/saved_queries/SavedQueries';
 import SavedQueryBar from './components/saved_queries/SavedQueryBar';
 import usePromiseResult from './hooks/usePromiseResult';
@@ -73,8 +75,14 @@ const AppRouter: React.FC = () => {
                   <Route path={Routes.RULES_VISUALIZER}>
                     <RulesVisualizerView />
                   </Route>
+                  <Route path={Routes.RULE_PERFORMANCE}>
+                    <RulePerformance />
+                  </Route>
                   <Route exact path={[Routes.ENTITY, Routes.HOME, Routes.SAVED_QUERY]}>
                     <QueryView />
+                  </Route>
+                  <Route exact path={Routes.DASHBOARD}>
+                    <Dashboard />
                   </Route>
                   <Route exact path={Routes.SAVED_QUERY_LATEST}>
                     <div className={styles.spinner}>

@@ -1,0 +1,66 @@
+.page {
+  flex-grow: 1;
+  background-color: var(--background-secondary);
+  padding: 24px;
+  overflow-y: auto;
+}
+
+.header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.title {
+  margin-bottom: 0 !important;
+}
+
+.toolbar {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.lookback {
+  min-width: 150px;
+}
+
+.deepLink {
+  text-decoration: none;
+}
+
+.metricsRow {
+  margin-bottom: 16px;
+}
+
+.bottomRow {
+  margin-bottom: 16px;
+}
+
+.card {
+  background-color: var(--background-primary);
+  border: 1px solid var(--divider);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.cardTitle {
+  margin-bottom: 4px !important;
+}
+
+.cardSubtitle {
+  display: block;
+  margin-bottom: 12px;
+  font-size: 12px;
+}
+
+.footerMuted {
+  color: var(--text-light-secondary);
+  font-style: italic;
+}

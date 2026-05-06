@@ -1,18 +1,22 @@
 import * as React from 'react';
-import { Route, RouteComponentProps } from 'react-router-dom';
+import { Route, RouteComponentProps, useRouteMatch } from 'react-router-dom';
 
 import useQueryStore from '../../stores/QueryStore';
+import useAutoRefreshStore from '../../stores/AutoRefreshStore';
 import { DefaultIntervals } from '../../types/QueryTypes';
 import { startRecordingClicks, stopRecordingClicks } from '../../utils/EventListenerUtils';
 import { getQueryDateRange, CUSTOM_RANGE_OPTION } from '../../utils/QueryUtils';
+import AutoRefreshToggle from '../common/AutoRefreshToggle';
 import BulkLabelDrawer from '../bulk_label_drawer/BulkLabelDrawer';
 import EntityFeatureFilters from '../entities/EntityFeatureFilters';
+import EntityProfileCard from '../entities/EntityProfileCard';
 import FeatureFiltersDetailBar from '../entities/FeatureFiltersDetailBar';
 import EntityDrawer from '../entities/LabelDrawer';
 import EventStream from '../event_stream/EventStream';
 import Timeseries from '../timeseries/Timeseries';
 import TopN from '../top_n/TopN';
 import Charts from '../charts/Charts';
+import ChartsExtras from '../charts/ChartsExtras';
 import QueryDatePicker from './QueryDatePicker';
 import QueryPanel from './QueryPanel';
 
@@ -39,6 +43,22 @@ const QueryView: React.FC = () => {
       document.removeEventListener('keyup', stopRecordingClicks);
     };
   }, []);
+
+  // Tie the auto-refresh tick to the executed query.  Refreshing only makes
+  // sense for non-custom intervals, where the start/end are derived from
+  // "now".  Bumping `executedQuery` re-derives the date range and propagates
+  // through the existing query-driven components.
+  const tick = useAutoRefreshStore((state) => state.tick);
+  React.useEffect(() => {
+    if (tick === 0) return;
+    if (executedQuery.interval == null || executedQuery.interval === CUSTOM_RANGE_OPTION) return;
+    updateExecutedQuery({ ...executedQuery, ...getQueryDateRange(executedQuery.interval) });
+    // We deliberately depend only on `tick` here; including `executedQuery`
+    // would create a feedback loop because `updateExecutedQuery` mutates it.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tick]);
+
+  const entityRouteMatch = useRouteMatch<{ entityType: string; entityId: string }>(Routes.ENTITY);
 
   const isDateRangeEmpty = (): boolean => {
     return dateRange.start === '' && dateRange.end === '';
@@ -70,6 +90,9 @@ const QueryView: React.FC = () => {
               interval={interval}
               dateRange={dateRange}
             />
+            <div className={styles.toolbarRight}>
+              <AutoRefreshToggle />
+            </div>
             <Route
               path={Routes.ENTITY}
               // @ts-expect-error (yarn.lock upgrade)
@@ -84,10 +107,21 @@ const QueryView: React.FC = () => {
           <div className={styles.charts}>
             <div className={styles.chartsLeft}>
               <Timeseries />
+              <ChartsExtras />
               <Charts />
               <TopN />
             </div>
             <div className={styles.chartsRight}>
+              {entityRouteMatch != null && (
+                <div className={styles.entityProfileWrapper}>
+                  <EntityProfileCard
+                    entityType={decodeURIComponent(entityRouteMatch.params.entityType)}
+                    entityId={decodeURIComponent(entityRouteMatch.params.entityId)}
+                    refreshKey={tick}
+                    compact
+                  />
+                </div>
+              )}
               <EventStream />
             </div>
           </div>
