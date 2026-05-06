@@ -6,7 +6,7 @@ echo "Creating Bigtable instance and tables"
 export BIGTABLE_EMULATOR_HOST=bigtable:8361
 
 echo "Creating Bigtable instance"
-cbt -project=osprey-dev -instance=osprey-bigtable createinstance osprey-bigtable 'Osprey Development Instance' osprey-bigtable-cluster us-central1-a 1 SSD || true
+cbt -project=osprey-dev -instance=osprey-bigtable createinstance osprey-bigtable 'T&S Demo Development Instance' osprey-bigtable-cluster us-central1-a 1 SSD || true
 
 echo "Creating audit_log table..."
 cbt -project=osprey-dev -instance=osprey-bigtable createtable audit_log || true

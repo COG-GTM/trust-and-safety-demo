@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Bulk generate realistic test events and push them to Kafka for Osprey processing.
+"""Bulk generate realistic test events and push them to Kafka for T&S Demo processing.
 
 Usage:
     python bulk_generate.py --count 1000 [--kafka-broker localhost:9092]
@@ -634,7 +634,7 @@ def _pick_trending_context() -> dict[str, str]:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description='Bulk generate realistic Osprey test events')
+    parser = argparse.ArgumentParser(description='Bulk generate realistic T&S Demo test events')
     parser.add_argument('--count', type=int, default=1000, help='Number of events to generate')
     parser.add_argument('--kafka-broker', default='localhost:9092', help='Kafka broker address')
     parser.add_argument('--topic', default='osprey.actions_input', help='Kafka topic')

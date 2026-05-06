@@ -5,7 +5,7 @@ from osprey.engine.executor.node_executor.unary_operation_executor import _UNARY
 
 
 class OspreyUnaryExecutor:
-    """There exists a need to execute certain Unary operations outside of the scope of the Osprey rule executor.
+    """There exists a need to execute certain Unary operations outside of the scope of the T&S Demo rule executor.
 
     This provides an interface to do that by running simple validations and executing the UnaryOperations.
     """

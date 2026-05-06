@@ -1,8 +1,8 @@
-While Osprey worker can stand on its own by directly ingesting data from Kafka, Osprey Coordinator provides an alternative that provides additional features such as load balancing and synchronous actions.
+While T&S Demo worker can stand on its own by directly ingesting data from Kafka, T&S Demo Coordinator provides an alternative that provides additional features such as load balancing and synchronous actions.
 
 ## Quick Start
 
-The easiest way to run Osprey with the Coordinator is using the helper script from the repository root:
+The easiest way to run T&S Demo with the Coordinator is using the helper script from the repository root:
 
 ```bash
 # Start with coordinator
@@ -24,7 +24,7 @@ docker compose -f docker-compose.yaml -f example_docker_compose/run_osprey_with_
 
 ## Overview
 
-The **Osprey Coordinator** is a Rust-based service that acts as a central hub for distributing actions to Osprey Workers for rule evaluation. It provides two primary modes for receiving actions:
+The **T&S Demo Coordinator** is a Rust-based service that acts as a central hub for distributing actions to T&S Demo Workers for rule evaluation. It provides two primary modes for receiving actions:
 
 1. **Bidirectional gRPC Streaming** - Workers connect to the coordinator via persistent bidirectional streams
 2. **Synchronous gRPC API** - External services send actions directly for immediate processing
@@ -43,7 +43,7 @@ The coordinator can consume actions from Kafka, Pubsub and/or receives them via 
            │
            ▼
 ┌─────────────────────────────────────────────┐
-│        Osprey Coordinator (Rust)            │
+│        T&S Demo Coordinator (Rust)          │
 │  ┌─────────────────────────────────────┐    │
 │  │  Priority Queue                     │    │
 │  │  - Sync Actions (high priority)     │    │
@@ -57,7 +57,7 @@ The coordinator can consume actions from Kafka, Pubsub and/or receives them via 
                │
                ▼
     ┌──────────────────────┐
-    │  Osprey Workers      │
+    │  T&S Demo Workers     │
     │  (Python)            │
     │  - Process rules     │
     │  - Send verdicts     │

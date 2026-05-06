@@ -1,4 +1,4 @@
-# Osprey Example Rules
+# T&S Demo Example Rules
 
 This example rules project demonstrates how to write a simple rule that:
 
@@ -29,7 +29,7 @@ Your users also have user IDs which are strings. Whenever a user creates an even
 }
 ```
 
-To moderate these events with Osprey, you can produce them on a Kafka event bus in the following format which Osprey understands:
+To moderate these events with T&S Demo, you can produce them on a Kafka event bus in the following format which T&S Demo understands:
 
 ```json
 { "send_time": "2025-08-25T14:30:45.123456789Z", "data": "{\"action_id\": 1, \"action_name\": \"create_post\", \"data\":{\"user_id\": \"user_1923\", \"event_type\": \"create_post\", \"post\": { \"text\": \"hello world\" }}}"}
@@ -37,16 +37,16 @@ To moderate these events with Osprey, you can produce them on a Kafka event bus 
 
 ## Try it out
 
-From inside the Osprey project root directory, run `docker compose up`. This will start an Osprey worker and a Kafka server.
+From inside the project root directory, run `docker compose up`. This will start a T&S Demo worker and a Kafka server.
 
-Next, use `kafka-console-producer` to send a test event to the Osprey Kafka consumer:
+Next, use `kafka-console-producer` to send a test event to the T&S Demo Kafka consumer:
 
 ```sh
 # Note that on some Linux distrubtions, this may be `kafka-console-producer.sh` rather than `kafka-console-producer`.
 kafka-console-producer --bootstrap-server localhost:9092 --topic osprey.actions_input
 ```
 
-Copy and paste the event above into the producer, then check the Osprey worker's logs. You should see an event that has a `ban-user` effect attached to it. The output JSON looks like this:
+Copy and paste the event above into the producer, then check the T&S Demo worker's logs. You should see an event that has a `ban-user` effect attached to it. The output JSON looks like this:
 
 ```json
 {

@@ -79,7 +79,7 @@ class VerdictsAckingContext(NoopAckingContext[_T]):
     """
     A context manager for storing verdicts from the rules sink inside of a NoopAckingContext :3
 
-    This is used to send verdicts back to the Osprey Coordinator, if any were captured~
+    This is used to send verdicts back to the T&S Demo Coordinator, if any were captured~
     """
 
     def __init__(self, item: _T) -> None:

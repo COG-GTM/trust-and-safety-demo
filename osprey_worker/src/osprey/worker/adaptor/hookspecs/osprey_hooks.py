@@ -75,7 +75,7 @@ def register_label_output_sink(config: Config, labels_provider: LabelsProvider) 
     If None is returned or this hook is not implemented, the default LabelOutputSink is used.
 
     Args:
-        config: The Osprey configuration object.
+        config: The T&S Demo configuration object.
         labels_provider: The labels provider instance (from register_labels_service_or_provider).
 
     Returns:

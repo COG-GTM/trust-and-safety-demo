@@ -4,7 +4,7 @@ package osprey.rpc.common.v1;
 
 import "google/protobuf/timestamp.proto";
 
-// ~ osprey sync verdicts ~
+// ~ T&S Demo sync verdicts ~
 message Verdicts {
     uint64 action_id = 1;
     string action_name = 2;

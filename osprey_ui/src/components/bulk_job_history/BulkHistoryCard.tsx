@@ -45,7 +45,7 @@ const BulkHistoryCard = ({ task, index }: BulkHistoryCardProps) => {
         renderValue={([key, value]) => {
           if (key.toUpperCase().endsWith('FILTER')) {
             return (
-              <a title="Click to view in Osprey" href={formatted_task.getQueryUrl()}>
+              <a title="Click to view in T&amp;S Demo" href={formatted_task.getQueryUrl()}>
                 {value}
               </a>
             );

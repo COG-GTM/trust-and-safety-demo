@@ -3,13 +3,13 @@
 usage() {
     cat <<EOF
 Usage: entrypoint.sh <command>
-Osprey docker entrypoint.
+T&S Demo docker entrypoint.
 
 Commands:
   osprey-worker
     Runs the worker
   osprey-ui-api
-    Runs the Osprey UI API
+    Runs the T&S Demo UI API
   run-tests
     Runs tests for the various projects supported here
   operator

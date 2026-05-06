@@ -1,6 +1,6 @@
 # Setup Guide
 
-This guide provides comprehensive instructions for setting up a development environment for Osprey.
+This guide provides comprehensive instructions for setting up a development environment for T&S Demo.
 
 ## Prerequisites
 
@@ -15,8 +15,8 @@ This guide provides comprehensive instructions for setting up a development envi
 ### 1. Clone the Repository
 
 ```bash
-git clone git@github.com:roostorg/osprey.git
-cd osprey
+git clone git@github.com:COG-GTM/trust-and-safety-demo.git
+cd trust-and-safety-demo
 ```
 
 ### 2. Install Dependencies
@@ -80,21 +80,21 @@ or using the wrapper script
 ```
 
 This starts up many services, including:
-- **Osprey Worker**: The main engine that processes input events given the rules and UDFs
+- **T&S Demo Worker**: The main engine that processes input events given the rules and UDFs
   - **Test Data Producer**: Optional with `--profile test_data`
-- **Osprey UI**: Frontend service that hosts the react code for the web interface and communicates to the UI API
-- **Osprey UI API**: Backend service that provides data and functionality to the web interface
+- **T&S Demo UI**: Frontend service that hosts the react code for the web interface and communicates to the UI API
+- **T&S Demo UI API**: Backend service that provides data and functionality to the web interface
 - **Kafka** (KRaft mode): Message streaming for user generated events
 - **Postgres**: A database that the Worker, UI API, and Druid use for various reasons, such as the Postgres-backed Labels Service (in the example plugins)
-- **Druid**: A database that consumes Osprey Worker outputs to power the UI API for real-time querying
+- **Druid**: A database that consumes T&S Demo Worker outputs to power the UI API for real-time querying
 
-Alternatively, you can start Osprey with `osprey-coordinator`, refer to the [Coordinator README](../example_docker_compose/run_osprey_with_coordinator/README.md) for more information
+Alternatively, you can start T&S Demo with `osprey-coordinator`, refer to the [Coordinator README](../example_docker_compose/run_osprey_with_coordinator/README.md) for more information
 
 ### 6. (Optional) Open ports for the UI/UI API
 
 By default, the `docker-compose.yaml` binds running services to `127.0.0.1`. If you are running the docker compose on a headless machine, you may need to modify this configuration and/or make changes to your firewall, specifically for ports `5002` and `5004`.
 
-For example, if you use Tailscale to access your Osprey instance, you may change `127.0.0.1:5002:5002` to `<Tailscale IP>:5002:5002`. Alternatively, if you wish for your instance to be accessible from the public internet, you may set it simply to `5002:5002` to bind to `0.0.0.0`.
+For example, if you use Tailscale to access your T&S Demo instance, you may change `127.0.0.1:5002:5002` to `<Tailscale IP>:5002:5002`. Alternatively, if you wish for your instance to be accessible from the public internet, you may set it simply to `5002:5002` to bind to `0.0.0.0`.
 
 Be aware that some firewalls like iptables/UFW do _not_ prevent access to ports being used by Docker networking. Not explicitly setting a bind address with only UFW as a firewall will not prevent access from the public internet unless [properly configured](https://github.com/chaifeng/ufw-docker).
 
@@ -102,13 +102,13 @@ Be aware that some firewalls like iptables/UFW do _not_ prevent access to ports 
 
 The UI will automatically connect to the backend services running in Docker containers.
 
-- Osprey UI: [localhost:5002](http://localhost:5002)
+- T&S Demo UI: [localhost:5002](http://localhost:5002)
 - Backend API: [localhost:5004](http://localhost:5004)
 - Worker Service: [localhost:5001](http://localhost:5001)
 
 ## Plugins
 
-In Osprey, UDFs and output sinks are designed to be easily portable. This is done through a plugin system based on pluggy. An example plugin package has been provided for reference, see `example_plugins/register_plugins.py`:
+In T&S Demo, UDFs and output sinks are designed to be easily portable. This is done through a plugin system based on pluggy. An example plugin package has been provided for reference, see `example_plugins/register_plugins.py`:
 
 ```python
 @hookimpl_osprey

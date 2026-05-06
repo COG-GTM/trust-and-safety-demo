@@ -47,7 +47,7 @@ A Singleton that holds a `LabelsProvider`, if one is registered by the plugin ma
 
 If not, this Singleton will hold `None`. This makes it always safe to call `LABELS_PROVIDER.instance()`,
 and enforces type checking rules when dealing with labels provider code, which may or may not be
-supplied by users of Osprey.
+supplied by users of T&S Demo.
 
 An example use pattern might be:
 ```py
@@ -57,5 +57,5 @@ if labels_provider:
 ```
 
 Because this is a Singleton, implementers of `LabelsServiceBase` / `LabelsProvider` can implement statefulness
-and expect that the statefulness will be present across all references within a given Osprey worker.
+and expect that the statefulness will be present across all references within a given T&S Demo worker.
 """

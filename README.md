@@ -1,6 +1,6 @@
 <img width="200" height="64" alt="ROOST logo" src="images/ROOST-Horizontal-Yellow.png" />
 
-# Osprey
+# T&S Demo
 
 **Automate the obvious and investigate the ambiguous.** High-performance safety rules engine for real-time event processing at scale. 
 
@@ -9,22 +9,22 @@
 - let operators query human actions and past decisions
 - perform investigations or write new rules based on decisions
 
-Osprey is an event stream decisions engine and analysis UI designed to investigate and take automatic action on events and their properties as they happen in real-time. Originally developed internally at [Discord](https://discord.com/) to combat spam, abuse, botting, and scripting across its platform, Osprey has been open-sourced to help other platforms facing similar challenges.
+T&S Demo is an event stream decisions engine and analysis UI designed to investigate and take automatic action on events and their properties as they happen in real-time. Originally developed internally at [Discord](https://discord.com/) to combat spam, abuse, botting, and scripting across its platform, T&S Demo has been open-sourced to help other platforms facing similar challenges.
 
-![Osprey UI sample](docs/images/query-and-charts.png)
+![T&S Demo UI sample](docs/images/query-and-charts.png)
 
-Osprey is a library for processing actions through human-written rules and outputting verdicts & custom effects back to configurable output sinks. It evaluates events using structured rule logic (SML) that is extendable via user-defined functions (UDFs). Osprey can also track state across events by labelling entities if implementers provide a labels service backend (see [labels_service.py](./example_plugins/src/services/labels_service.py) for a Postgres-backed labels service example).
+T&S Demo is a library for processing actions through human-written rules and outputting verdicts & custom effects back to configurable output sinks. It evaluates events using structured rule logic (SML) that is extendable via user-defined functions (UDFs). T&S Demo can also track state across events by labelling entities if implementers provide a labels service backend (see [labels_service.py](./example_plugins/src/services/labels_service.py) for a Postgres-backed labels service example).
 
-Osprey is built for engineers and Trust & Safety teams who want to explore, test, and integrate its core capabilities into their platform for incident response and Trust & Safety investigation. [Read more about user research and personas](docs/user_personas.md).
+T&S Demo is built for engineers and Trust & Safety teams who want to explore, test, and integrate its core capabilities into their platform for incident response and Trust & Safety investigation. [Read more about user research and personas](docs/user_personas.md).
 
 ## Adopters
 
-Osprey is used by:
+T&S Demo is used by:
 
 [![Bluesky](docs/images/adopters/bluesky.png)](https://bsky.social) | [![Discord](docs/images/adopters/discord.png)](https://discord.com) | [![Matrix.org](docs/images/adopters/matrix.png)](https://matrix.org)
 --- | --- | ---
 
-Using Osprey and want to add your project/organization to this list? [Open a pull request!](https://github.com/roostorg/osprey/edit/main/README.md)
+Using T&S Demo and want to add your project/organization to this list? [Open a pull request!](https://github.com/COG-GTM/trust-and-safety-demo/edit/main/README.md)
 
 ## Development
 
@@ -55,4 +55,4 @@ Your experimentation feedback will directly shape future priorities and help us 
 
 ## Recognition
 
-Discord uses Osprey to quickly detect and remove new types of harm that put users at risk. Rather than leaving other platforms to build similar tools from scratch, ROOST and Discord have open-sourced this powerful rule engine in collaboration with [internet.dev](https://internet.dev/) to make it available for anyone who needs it.
+Discord uses T&S Demo to quickly detect and remove new types of harm that put users at risk. Rather than leaving other platforms to build similar tools from scratch, ROOST and Discord have open-sourced this powerful rule engine in collaboration with [internet.dev](https://internet.dev/) to make it available for anyone who needs it.

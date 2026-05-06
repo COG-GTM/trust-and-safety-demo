@@ -1,10 +1,10 @@
-# Osprey Rules
+# T&S Demo Rules
 
 ![images/rules_architecture.png](images/rules_architecture.png)
 
 ## Creating Rules
 
-Osprey rules are written in SML (Some Madeup Language) which is a subset of Python with additional restrictions to simplify rule writing. You may write rules that are specific to
+T&S Demo rules are written in SML (Some Madeup Language) which is a subset of Python with additional restrictions to simplify rule writing. You may write rules that are specific to
 single event types on a network, or ones that are applied to multiple event types.
 
 By themselves, rules only create variables, and without a corresponding `WhenRules()` function call, the rule will have no effects outside of evaluation and query functionality.
@@ -15,13 +15,13 @@ Rules currently support the following concepts through the `Rule(...)` function 
 
     `Rule_Name = Rule(...)`
 
-    The name of the rule also functions as a conventional "RuleId" and the name of the bool that can be used to query individual rule hits in the Osprey Query UI. As a result, changing the name of a rule after activation may affect historical query results in the UI if not logged externally.
+    The name of the rule also functions as a conventional "RuleId" and the name of the bool that can be used to query individual rule hits in the T&S Demo Query UI. As a result, changing the name of a rule after activation may affect historical query results in the UI if not logged externally.
 
 - Logic
 
     `when_all=[]`
 
-    The actual logic that will be used to evaluate Osprey rules is all encompassed as single comma-delimited list of signals within the `when_all` parameter of the `Rule(...)` function and supports the use of Labels, Plugins, UDFs and other values to help enrich heuristics.
+    The actual logic that will be used to evaluate T&S Demo rules is all encompassed as single comma-delimited list of signals within the `when_all` parameter of the `Rule(...)` function and supports the use of Labels, Plugins, UDFs and other values to help enrich heuristics.
 
     At present, when evaluating UDFs or abstracted variables, any `NULL` evaluations in the series will cause the entire rule function to evaluate as `NULL`, which may be undesirable.
 
@@ -163,7 +163,7 @@ AccountAgeSeconds: int = JsonData(
 )
 ```
 
-Here, instead of simply using `JsonData`, we instead use the `EntityJson` UDF for the `UserID`. This is covered in the [UDFs section](#user-defined-functions-udfs), but as a rule of thumb, you likely will want to have values for things like a user's ID set to be entities. This will help more later, such as when doing data explorations within the Osprey UI.
+Here, instead of simply using `JsonData`, we instead use the `EntityJson` UDF for the `UserID`. This is covered in the [UDFs section](#user-defined-functions-udfs), but as a rule of thumb, you likely will want to have values for things like a user's ID set to be entities. This will help more later, such as when doing data explorations within the T&S Demo UI.
 
 ### Model Hierarchy
 
@@ -172,7 +172,7 @@ In practice, you may find it useful to create a hierarchy of base models:
 - `base.sml` for features present in every event (user IDs, handles, account stats, etc.)
 - `account_base.sml` for features that appear only in account related events, but always appear in each account related event. Similarly, you may add one like `record_base.sml` for those features which appear in all record events.
 
-This type of hierarchy prevents duplication (which Osprey does not allow) and ensures features are defined at the appropriate level of abstraction.
+This type of hierarchy prevents duplication (which T&S Demo does not allow) and ensures features are defined at the appropriate level of abstraction.
 
 ## Effects with WhenRules
 
@@ -209,7 +209,7 @@ to place any effects toward the bottom of workflows.
 After all rules are evaluated for an input event, a set of output sinks takes the resulting `ExecutionResult` and performs additional work based on that data. These may be defined
 as part of a plugin for performing domain specific work.
 
-Some default use cases include a `StdoutOutputSink` which simply outputs the result to the log, a `KafkaOutputSink` which pipes data to Kafka (used for Osprey UI), or the
+Some default use cases include a `StdoutOutputSink` which simply outputs the result to the log, a `KafkaOutputSink` which pipes data to Kafka (used for T&S Demo UI), or the
 `LabelOutputSink` which can add some stateful data to be used in future rules executions.
 
 ```python
@@ -239,7 +239,7 @@ def push(self, result: ExecutionResult) -> None:
 
 ## User Defined Functions (UDFs)
 
-User Defined Functions (UDFs) are plugins written in Python that enable users of Osprey to extend and customize their use of the Osprey SML. UDFs are implemented as Python functions and are registered
+User Defined Functions (UDFs) are plugins written in Python that enable users of T&S Demo to extend and customize their use of the T&S Demo SML. UDFs are implemented as Python functions and are registered
 as a plugin. They extend the `UDFBase` abstract base class with a set of arguments and an output. These will be executed whenever called in SML.
 
 ```python
@@ -303,7 +303,7 @@ UDF outputs can also implement the `CustomExtractedFeature` interface - which ge
 
 ## Labels
 
-Labels are a standard plugin that enable stateful rules, and touch many parts of Osprey. They are effectively tags on various entities, which may be arbitrarily defined.
+Labels are a standard plugin that enable stateful rules, and touch many parts of T&S Demo. They are effectively tags on various entities, which may be arbitrarily defined.
 
 ### Creating Entities
 

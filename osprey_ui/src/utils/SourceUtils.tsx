@@ -1,4 +1,4 @@
-const GITHUB_REPO_URL = 'https://github.com/roostorg/osprey/tree/main/example_rules';
+const GITHUB_REPO_URL = 'https://github.com/COG-GTM/trust-and-safety-demo/tree/main/example_rules';
 
 export function getSourcesUrl({ path, lineNumber }: PathInfo): string {
   return `${GITHUB_REPO_URL}${path}#L${lineNumber}`;

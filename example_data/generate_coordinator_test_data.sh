@@ -108,7 +108,7 @@ cleanup() {
 trap cleanup SIGINT SIGTERM
 
 # Main execution
-echo "Generating actions every second to Osprey Coordinator at $COORDINATOR_HOST"
+echo "Generating actions every second to T&S Demo Coordinator at $COORDINATOR_HOST"
 echo "Press Ctrl+C to stop..."
 echo
 

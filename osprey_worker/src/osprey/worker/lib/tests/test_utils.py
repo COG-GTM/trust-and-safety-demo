@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 
 
 def make_postgres_database_config_fixture() -> object:
-    """Returns a fixture which sets up the Osprey test database for the session.
+    """Returns a fixture which sets up the T&S Demo test database for the session.
     Result should be stored in a variable in a conftest.py file.
     """
 

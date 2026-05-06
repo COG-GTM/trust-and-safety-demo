@@ -1,19 +1,19 @@
 #!/bin/bash
 set -e
 
-# Helper script to start Osprey with different configurations
+# Helper script to start T&S Demo with different configurations
 # Usage:
 #   ./start.sh                    # Start with worker directly consuming from Kafka
-#   ./start.sh --with-coordinator # Start with Osprey Coordinator
+#   ./start.sh --with-coordinator # Start with T&S Demo Coordinator
 #   ./start.sh --help             # Show this help
 
 show_help() {
-    echo "Osprey Startup Helper"
+    echo "T&S Demo Startup Helper"
     echo ""
     echo "Usage: ./start.sh [OPTIONS] [COMPOSE_ARGS...]"
     echo ""
     echo "Options:"
-    echo "  --with-coordinator    Start Osprey with Coordinator (workers connect to coordinator)"
+    echo "  --with-coordinator    Start T&S Demo with Coordinator (workers connect to coordinator)"
     echo "  --help, -h            Show this help message"
     echo ""
     echo "Examples:"
@@ -52,10 +52,10 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [ "$USE_COORDINATOR" = true ]; then
-    echo "Starting Osprey with Coordinator..."
+    echo "Starting T&S Demo with Coordinator..."
     COMPOSE_FILES="$COMPOSE_FILES -f example_docker_compose/run_osprey_with_coordinator/docker-compose.coordinator.yaml"
 else
-    echo "Starting Osprey without Coordinator (direct Kafka consumption)..."
+    echo "Starting T&S Demo without Coordinator (direct Kafka consumption)..."
 fi
 
 # If no compose args provided, default to 'up'

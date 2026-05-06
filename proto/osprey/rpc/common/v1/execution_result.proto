@@ -4,7 +4,7 @@ package osprey.rpc.common.v1;
 
 import "google/protobuf/timestamp.proto";
 
-// ~ osprey post-execution result ~
+// ~ T&S Demo post-execution result ~
 message ExecutionResult {
     uint64 action_id = 1;
     string action_name = 2;

@@ -29,7 +29,7 @@ class SessionWithRetries:
         connection_retries: int = requests.adapters.DEFAULT_RETRIES,
     ) -> None:
         session = requests.Session()
-        session.headers['User-Agent'] = f'Osprey HTTP Client/{version} Environment/{environment}'
+        session.headers['User-Agent'] = f'T&S Demo HTTP Client/{version} Environment/{environment}'
 
         # The default adapters are mounted for HTTP and HTTPS with requests.adapters.DEFAULT_POOLSIZE
         # pool_connections and pool_maxsize, so this is mimicking that behavior with the option

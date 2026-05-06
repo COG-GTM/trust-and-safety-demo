@@ -1,4 +1,4 @@
-# Osprey User Interface Guide
+# T&S Demo User Interface Guide
 
 ## Getting Started
 
@@ -8,19 +8,19 @@ npm install
 npm start
 ```
 
-The Osprey UI has several pages accessible by a left-hand menu:
+The T&S Demo UI has several pages accessible by a left-hand menu:
 
 ![Left Side Menu](images/left-side-menu.png)
 
-Home will bring you to the default page of Osprey, with three main columns.
+Home will bring you to the default page of T&S Demo, with three main columns.
 
-![Osprey Home](images/osprey-home.png)
+![T&S Demo Home](images/osprey-home.png)
 
 ### Left Column: Query
 
 #### Query Box
 
-The Osprey Query UI uses the same SML syntax as rules, but for searching and filtering near-real-time and historical data rather than creating new rules. Using the test data generator, you can try writing a query to look for an action called “create\_post” specifically from a given User ID.
+The T&S Demo Query UI uses the same SML syntax as rules, but for searching and filtering near-real-time and historical data rather than creating new rules. Using the test data generator, you can try writing a query to look for an action called “create\_post” specifically from a given User ID.
 
 ![Query Box](images/query-box.png)
 
@@ -32,7 +32,7 @@ A query can be run against a time window ranging from the last second to the las
 
 ![Query Time Range](images/query-time-range.png)
 
-The Osprey UI is designed to be dynamic and update in real-time. If any other component in the other two columns is interacted with, the query will automatically update and vice versa. The query also automatically populates the URL. This can be handy for sharing a specific query with someone on a team, but may present privacy risks.
+The T&S Demo UI is designed to be dynamic and update in real-time. If any other component in the other two columns is interacted with, the query will automatically update and vice versa. The query also automatically populates the URL. This can be handy for sharing a specific query with someone on a team, but may present privacy risks.
 
 ![Query and Charts](images/query-and-charts.png)
 
@@ -50,7 +50,7 @@ The Query History can also be accessed and seen in a different format via the le
 
 #### Saved Queries
 
-If there are specific queries that are used often, Osprey provides the ability to save a query:
+If there are specific queries that are used often, T&S Demo provides the ability to save a query:
 
 ![Save Query History](images/query-history-save.png)
 
@@ -60,7 +60,7 @@ The user who initiated the query and when the query was first run is logged as p
 
 ### Middle Column: Charts
 
-The middle column in Osprey shows two types of charts: **Time Series** and **Top N Results**. Both sections provide the ability to add extra charts to see different slices of time or types of top results.
+The middle column in T&S Demo shows two types of charts: **Time Series** and **Top N Results**. Both sections provide the ability to add extra charts to see different slices of time or types of top results.
 
 ![Charts](images/charts.png)
 
@@ -102,7 +102,7 @@ You can also select PoP (Period over Period) to compare the query results with r
 
 ### Right Column: Event Stream
 
-The Event Stream is essentially Osprey's "live feed" and investigation dashboard where security teams can:
+The Event Stream is essentially T&S Demo's "live feed" and investigation dashboard where security teams can:
 
 * Monitor real-time activity
 * Search historical events using SML queries
@@ -115,12 +115,12 @@ It provides a more detailed view of each event that matches the query. The Event
 
 The event stream is also viewable in a card format vs a list format (list format shown in the screenshot).
 
-Osprey users may have personal preferences on how to do investigations and what information is most helpful for them. Osprey makes it easy to customize the types of information shown in the Event Stream by clicking “Summary Features”
+T&S Demo users may have personal preferences on how to do investigations and what information is most helpful for them. T&S Demo makes it easy to customize the types of information shown in the Event Stream by clicking “Summary Features”
 ![Summary Features](images/summary-features.png)
 
 ### Labeling
 
-Any unique entity can be labeled in the Osprey UI. This manual labeling tool is used by Safety teams to tag individual entities (users, IPs, emails, etc.) with labels. Labels are essentially the manual annotation tool that feeds into Osprey's automated rule system, allowing human judgment to enhance machine detection. Labels can be positive, negative, or neutral. Examples:
+Any unique entity can be labeled in the T&S Demo UI. This manual labeling tool is used by Safety teams to tag individual entities (users, IPs, emails, etc.) with labels. Labels are essentially the manual annotation tool that feeds into T&S Demo's automated rule system, allowing human judgment to enhance machine detection. Labels can be positive, negative, or neutral. Examples:
 
 **Negative Labels: Harmful/problematic behavior**
 * Examples: "spammer", "bot", "banned", "suspicious"
@@ -143,11 +143,11 @@ This page can be used as a manual for writing SML rules or queries, guide for un
 
 ### Bulk Labeling
 
-There are two ways to bulk label items in Osprey: the left-side menu and via the chart column. In this example, you can bulk label all the users that have posted a message that is not empty:
+There are two ways to bulk label items in T&S Demo: the left-side menu and via the chart column. In this example, you can bulk label all the users that have posted a message that is not empty:
 
 ![Bulk Label](images/bulk-label.png)
 
-**Bulk labels can be dangerous if there’s a false positive\!** Osprey provides a counter of how many unique entities are about to be bulk labeled at the top. Labels can be positive, negative, or neutral. A reason must be provided when labeling anything. Each bulk job will create a unique task ID and log the user who initiated the bulk job, the status of the bulk labeling, and a link to the query that the bulk job originated from.
+**Bulk labels can be dangerous if there’s a false positive\!** T&S Demo provides a counter of how many unique entities are about to be bulk labeled at the top. Labels can be positive, negative, or neutral. A reason must be provided when labeling anything. Each bulk job will create a unique task ID and log the user who initiated the bulk job, the status of the bulk labeling, and a link to the query that the bulk job originated from.
 
 To view all bulk labeling jobs that have been done, click into “Bulk Job History” from the left-side menu. You’ll need the unique task ID to look up a bulk job.
 
@@ -167,13 +167,13 @@ The Rule Visualizer shows how upstream labels, rules, and downstream labels inte
 
 #### Actions
 
-Actions are events that are sent to Osprey. An event is simply something that happens. When a user does something like create a post, send a message, change their username, etc an event happens to represent that. There are probably a lot of events emitted in your org, and Osprey doesn’t need to consume all of them.
+Actions are events that are sent to T&S Demo. An event is simply something that happens. When a user does something like create a post, send a message, change their username, etc an event happens to represent that. There are probably a lot of events emitted in your org, and T&S Demo doesn’t need to consume all of them.
 
 ##### Features
 
-A feature is any variable in the global namespace in Osprey. All features must be uniquely named. However, prefixing a \`\_\` at the start of a variable name prevents it from being exported as a feature and keeps the variable within the local file’s namespace.
+A feature is any variable in the global namespace in T&S Demo. All features must be uniquely named. However, prefixing a \`\_\` at the start of a variable name prevents it from being exported as a feature and keeps the variable within the local file’s namespace.
 
-Features are outputs of Osprey executions. Downstream, they are sent to and indexed by Druid, so users can query for events based on feature names later, i.e. \`UserEmail \== '`` despicable@example.com` ``.
+Features are outputs of T&S Demo executions. Downstream, they are sent to and indexed by Druid, so users can query for events based on feature names later, i.e. \`UserEmail \== '`` despicable@example.com` ``.
 
 ```py
 UserId: Entity[int] = EntityJson(type='User', path='$.user.id', coerce_type=True)
@@ -187,7 +187,7 @@ In the example above, both `UserId` and `UserEmail` are features.
 
 Entities are a special type of Feature. All entities are features, but not all features are entities. An entity can have effects applied to it, such as labels, classifications, or signals). Every entity has a type that determines which effects can be applied to it based on static validations.
 
-Entities get special treatment within the Osprey UI. Clicking on an entity in the tool will take you to an Entity View, providing a deep dive into its history.
+Entities get special treatment within the T&S Demo UI. Clicking on an entity in the tool will take you to an Entity View, providing a deep dive into its history.
 
 This could be:
 
@@ -231,7 +231,7 @@ If you’re looking for multiple types of events in “EventType” like for pos
 UDFs (read more [here](rules.md#user-defined-functions-udfs)) are a powerful part of queries. Once you define a UDF with the specific desired logic, you can reference it in a query.
 
 > [!NOTE]
-> If you try to query a UDF that doesn’t exist, Osprey will silently fail with a 500 error.
+> If you try to query a UDF that doesn’t exist, T&S Demo will silently fail with a 500 error.
 
 ```py
  # Text search
