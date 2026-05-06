@@ -13,6 +13,7 @@ import QueryHistory from './components/query_history/QueryHistory';
 import QueryView from './components/query_view/QueryView';
 import SavedQueries from './components/saved_queries/SavedQueries';
 import SavedQueryBar from './components/saved_queries/SavedQueryBar';
+import ExecutiveDashboard from './pages/ExecutiveDashboard/ExecutiveDashboard';
 import usePromiseResult from './hooks/usePromiseResult';
 import useApplicationConfigStore from './stores/ApplicationConfigStore';
 import { history } from './stores/QueryStore';
@@ -58,6 +59,9 @@ const AppRouter: React.FC = () => {
                   <EntityViewBar />
                 </Route>
                 <Switch>
+                  <Route path={Routes.EXECUTIVE_DASHBOARD}>
+                    <ExecutiveDashboard />
+                  </Route>
                   <Route path={Routes.QUERY_HISTORY}>
                     <QueryHistory />
                   </Route>

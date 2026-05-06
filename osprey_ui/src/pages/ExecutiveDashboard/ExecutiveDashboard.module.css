@@ -1,0 +1,84 @@
+.dashboardPage {
+  padding: 24px 32px 48px 32px;
+  background: #f6f7fb;
+  min-height: 100%;
+}
+
+.dashboardHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 16px;
+}
+
+.dashboardTitle {
+  font-size: 26px;
+  font-weight: 600;
+  color: #1a1f36;
+  margin: 0;
+}
+
+.dashboardSubtitle {
+  color: #5f6b7c;
+  font-size: 14px;
+}
+
+.controlsBar {
+  background: #ffffff;
+  border-radius: 6px;
+  padding: 12px 16px;
+  margin-bottom: 24px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+}
+
+.controlLabel {
+  color: #5f6b7c;
+  font-size: 13px;
+}
+
+.section {
+  margin-bottom: 24px;
+}
+
+.kpiCard :global(.ant-statistic-title) {
+  font-size: 13px;
+  color: #5f6b7c;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.kpiCard :global(.ant-statistic-content) {
+  font-size: 28px;
+  font-weight: 600;
+}
+
+.chartCard,
+.tableCard {
+  height: 100%;
+}
+
+.trendPositive {
+  color: #3e7025;
+  font-size: 12px;
+}
+
+.trendNegative {
+  color: #b23a32;
+  font-size: 12px;
+}
+
+.trendNeutral {
+  color: #94a3b8;
+  font-size: 12px;
+}
+
+.emptyState {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 240px;
+}
+
+.healthStat {
+  margin-bottom: 12px;
+}

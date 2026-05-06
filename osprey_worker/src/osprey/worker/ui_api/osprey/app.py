@@ -63,6 +63,7 @@ def create_app() -> Flask:
         bulk_actions,
         bulk_history,
         config,
+        dashboard,
         docs,
         entities,
         events,
@@ -115,6 +116,7 @@ def create_app() -> Flask:
     _register_with_prefix(app, bulk_history.blueprint)
     _register_with_prefix(app, rules_visualizer.blueprint)
     _register_with_prefix(app, bulk_actions.blueprint)
+    _register_with_prefix(app, dashboard.blueprint)
 
     app.after_request(audit_request)
 

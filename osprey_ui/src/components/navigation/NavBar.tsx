@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { MenuOutlined } from '@ant-design/icons';
+import { DashboardOutlined, MenuOutlined } from '@ant-design/icons';
 import { Menu } from 'antd';
 import classNames from 'classnames';
 import { Link, useLocation } from 'react-router-dom';
@@ -69,6 +69,9 @@ const NavBar = ({ children }: React.PropsWithChildren) => {
           >
             <Menu.Item key={Routes.HOME}>
               <Link to={Routes.HOME}>Home</Link>
+            </Menu.Item>
+            <Menu.Item key={Routes.EXECUTIVE_DASHBOARD} icon={<DashboardOutlined />}>
+              <Link to={Routes.EXECUTIVE_DASHBOARD}>Executive Dashboard</Link>
             </Menu.Item>
             <Menu.Item key={Routes.QUERY_HISTORY}>
               <Link to={Routes.QUERY_HISTORY}>Query History</Link>
