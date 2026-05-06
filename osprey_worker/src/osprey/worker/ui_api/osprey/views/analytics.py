@@ -67,6 +67,10 @@ def timeseries(request_model: TimeseriesDruidQuery) -> Any:
     SML query language; pass an empty string for "all events".
     """
     require_ability_with_request(request_model, CanViewEventsByEntity)
+    # Honor CanViewEventsByAction: scope Druid filter to actions the caller is permitted to see.
+    query_filter_ability = get_current_user().get_ability(CanViewEventsByAction)
+    if query_filter_ability:
+        return jsonify(request_model.execute(query_filter_abilities=[query_filter_ability]))
     return jsonify(request_model.execute())
 
 
@@ -160,6 +164,10 @@ def throughput() -> Any:
         granularity=granularity,
     )
 
+    # Honor CanViewEventsByAction: scope Druid filter to actions the caller is permitted to see.
+    query_filter_ability = get_current_user().get_ability(CanViewEventsByAction)
+    if query_filter_ability:
+        return jsonify(timeseries_query.execute(query_filter_abilities=[query_filter_ability]))
     return jsonify(timeseries_query.execute())
 
 
@@ -258,7 +266,12 @@ def execution_results() -> Any:
         entity=None,
         granularity=payload['granularity'],
     )
-    points: Any = timeseries_query.execute()
+    # Honor CanViewEventsByAction: scope Druid filter to actions the caller is permitted to see.
+    query_filter_ability = get_current_user().get_ability(CanViewEventsByAction)
+    if query_filter_ability:
+        points = timeseries_query.execute(query_filter_abilities=[query_filter_ability])
+    else:
+        points = timeseries_query.execute()
 
     summary = {'total': 0, 'points': len(points) if isinstance(points, list) else 0}
     if isinstance(points, list):

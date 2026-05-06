@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from datetime import datetime
 from http import HTTPStatus
-from typing import Any, Dict
+from typing import Any, Dict, List
 from unittest import mock
 
 import pytest
@@ -29,6 +29,29 @@ _ANALYTICS_CONFIG: Dict[str, Any] = {
                             {'name': 'CAN_VIEW_ANALYTICS', 'allow_all': True},
                             {'name': 'CAN_VIEW_EVENTS_BY_ENTITY', 'allow_all': True},
                             {'name': 'CAN_VIEW_EVENTS_BY_ACTION', 'allow_all': True},
+                        ]
+                    }
+                }
+            }
+        }
+    ),
+}
+
+
+_ACTION_RESTRICTED_CONFIG: Dict[str, Any] = {
+    'main.sml': '',
+    'config.yaml': json.dumps(
+        {
+            'acl': {
+                'users': {
+                    'local-dev@localhost': {
+                        'abilities': [
+                            {'name': 'CAN_VIEW_ANALYTICS', 'allow_all': True},
+                            {'name': 'CAN_VIEW_EVENTS_BY_ENTITY', 'allow_all': True},
+                            {
+                                'name': 'CAN_VIEW_EVENTS_BY_ACTION',
+                                'allow_specific': ['post_created'],
+                            },
                         ]
                     }
                 }
@@ -193,6 +216,69 @@ def test_analytics_execution_results_get(
     body = res.get_json()
     assert body['summary']['total'] == 42
     assert body['summary']['points'] == 1
+
+
+def _extract_action_filter_values(query_dict: Dict[str, Any]) -> List[str]:
+    """Walk a Druid query_dict and collect every ActionName selector value."""
+    values: List[str] = []
+
+    def _walk(node: Any) -> None:
+        if isinstance(node, dict):
+            if node.get('type') == 'selector' and node.get('dimension') == 'ActionName' and 'value' in node:
+                values.append(node['value'])
+            for v in node.values():
+                _walk(v)
+        elif isinstance(node, list):
+            for item in node:
+                _walk(item)
+
+    _walk(query_dict.get('filter'))
+    return sorted(values)
+
+
+@pytest.mark.use_rules_sources(_ACTION_RESTRICTED_CONFIG)
+def test_throughput_applies_can_view_events_by_action_filter(
+    app: Flask,
+    client: 'FlaskClient[Response]',
+    mock_druid_client: Any,
+    fake_druid: Any,
+) -> None:
+    """Regression: /analytics/throughput must inject the CAN_VIEW_EVENTS_BY_ACTION
+    Druid filter so a caller restricted to ``post_created`` cannot count events for
+    other actions, regardless of the ``query_filter`` they send."""
+    query = Query(query_dict={}, query_type='osprey.execution_results')  # type: ignore
+    query.result_json = '[]'
+    fake_druid.client._post.return_value = query
+
+    res = client.post(
+        url_for('analytics.throughput'),
+        data=json.dumps({'granularity': 'minute'}),
+        content_type='application/json',
+    )
+
+    assert res.status_code == HTTPStatus.OK, res.data
+    args, _ = fake_druid.client._post.call_args
+    assert _extract_action_filter_values(args[0].query_dict) == ['post_created']
+
+
+@pytest.mark.use_rules_sources(_ACTION_RESTRICTED_CONFIG)
+def test_execution_results_applies_can_view_events_by_action_filter(
+    app: Flask,
+    client: 'FlaskClient[Response]',
+    mock_druid_client: Any,
+    fake_druid: Any,
+) -> None:
+    """Regression: /analytics/execution-results must inject the CAN_VIEW_EVENTS_BY_ACTION
+    Druid filter for restricted callers."""
+    query = Query(query_dict={}, query_type='osprey.execution_results')  # type: ignore
+    query.result_json = '[]'
+    fake_druid.client._post.return_value = query
+
+    res = client.get(url_for('analytics.execution_results') + '?granularity=hour')
+
+    assert res.status_code == HTTPStatus.OK, res.data
+    args, _ = fake_druid.client._post.call_args
+    assert _extract_action_filter_values(args[0].query_dict) == ['post_created']
 
 
 @pytest.mark.use_rules_sources(_ANALYTICS_CONFIG)

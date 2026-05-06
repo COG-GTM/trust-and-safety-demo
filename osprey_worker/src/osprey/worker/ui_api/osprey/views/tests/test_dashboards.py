@@ -189,7 +189,7 @@ def test_list_dashboards_filters_by_user(app: Flask, client: 'FlaskClient[Respon
 
 @pytest.mark.use_rules_sources(_DASHBOARD_CONFIG)
 def test_list_dashboards_without_filter(app: Flask, client: 'FlaskClient[Response]', dashboard_storage: Any) -> None:
-    dashboard_storage.get_all.return_value = [_make_dashboard_stub(), _make_dashboard_stub(id=124)]
+    dashboard_storage.get_all.return_value = [_make_dashboard_stub(), _make_dashboard_stub(dashboard_id=124)]
     dashboard_storage.get_all_for_user.return_value = []
 
     res = client.get(url_for('dashboards.list_dashboards'))
