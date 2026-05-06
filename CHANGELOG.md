@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### 🛠 Breaking changes
 
 ### 🎉 New features
+- Add customizable dashboard with arrangeable analytics widgets (KPI, rule hits time series, rule distribution, effects breakdown, top entities, label activity, live event stream), Postgres-backed dashboard CRUD APIs, and new Druid analytics endpoints (`/api/analytics/rule-distribution`, `/api/analytics/effects-breakdown`, `/api/analytics/kpi-summary`)
 - Add Postgres execution result store ([#171](https://github.com/roostorg/osprey/pull/171) by [@serendipty01](https://github.com/serendipty01))
 - Add `ParseInt` UDF — converts a numeric string to an integer ([#190](https://github.com/roostorg/osprey/pull/190) by [@bealsbe](https://github.com/bealsbe))
 - Add `StringSlice` UDF which extracts a substring by index range ([#189](https://github.com/roostorg/osprey/pull/189) by [@bealsbe](https://github.com/bealsbe))
