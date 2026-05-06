@@ -1,0 +1,41 @@
+# Dashboard overlay — extends the main docker-compose.yaml to add the
+# executive analytics dashboard.
+#
+# Usage:
+#   docker compose -f docker-compose.yaml -f dashboard/docker-compose.dashboard.yml up -d \
+#       dashboard-backend dashboard-frontend
+
+services:
+  dashboard-backend:
+    build:
+      context: ./dashboard
+      dockerfile: Dockerfile.backend
+    container_name: dashboard-backend
+    environment:
+      DASHBOARD_DRUID_URL: http://druid-broker:8082
+      DASHBOARD_DRUID_DATASOURCE: osprey.execution_results
+      DASHBOARD_POSTGRES_URL: postgresql://osprey:FoolishPassword@postgres:5432/osprey
+      DASHBOARD_RESULTS_STORE_TYPE: minio
+      DASHBOARD_MINIO_ENDPOINT: minio:9000
+      DASHBOARD_MINIO_ACCESS_KEY: minioadmin
+      DASHBOARD_MINIO_SECRET_KEY: minioadmin123
+      DASHBOARD_MINIO_BUCKET: execution-output
+      DASHBOARD_REFRESH_INTERVAL_SECONDS: "30"
+      DASHBOARD_DEFAULT_LOOKBACK_HOURS: "24"
+    ports:
+      - "127.0.0.1:5005:5005"
+    depends_on:
+      - postgres
+      - minio
+    restart: unless-stopped
+
+  dashboard-frontend:
+    build:
+      context: ./dashboard
+      dockerfile: Dockerfile.frontend
+    container_name: dashboard-frontend
+    ports:
+      - "127.0.0.1:5006:5006"
+    depends_on:
+      - dashboard-backend
+    restart: unless-stopped

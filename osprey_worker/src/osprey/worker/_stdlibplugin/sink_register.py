@@ -6,6 +6,7 @@ from osprey.worker.adaptor.plugin_manager import hookimpl_osprey
 from osprey.worker.lib.config import Config
 from osprey.worker.lib.storage import ExecutionResultStorageBackendType
 from osprey.worker.sinks.sink.kafka_output_sink import KafkaOutputSink
+from osprey.worker.sinks.sink.metrics_output_sink import DashboardMetricsOutputSink
 from osprey.worker.sinks.sink.output_sink import BaseOutputSink, StdoutOutputSink
 from osprey.worker.sinks.sink.stored_execution_result_output_sink import StoredExecutionResultOutputSink
 
@@ -34,5 +35,9 @@ def register_output_sinks(config: Config) -> Sequence[BaseOutputSink]:
     # There may not be an execution result store configured, so check before adding the output sink
     if storage_backend is not None:
         sinks.append(StoredExecutionResultOutputSink())
+
+    # Optional executive-dashboard metrics sink.
+    if config.get_bool('OSPREY_DASHBOARD_METRICS_SINK', False):
+        sinks.append(DashboardMetricsOutputSink())
 
     return sinks
