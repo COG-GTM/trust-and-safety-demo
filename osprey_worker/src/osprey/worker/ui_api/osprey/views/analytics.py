@@ -78,15 +78,16 @@ def _topn_query(request_model: _AnalyticsTopNQuery, dimension: Optional[str] = N
         limit=request_model.limit,
     )
     query_filter_ability = get_current_user().get_ability(CanViewEventsByAction)
-    if query_filter_ability:
-        response = topn_request.execute(
-            calculate_previous_period=False,
-            query_filter_abilities=[query_filter_ability],
-        )
-    else:
-        response = topn_request.execute(calculate_previous_period=False)
-    if isinstance(response, ValueError):
-        abort(400, str(response))
+    try:
+        if query_filter_ability:
+            response = topn_request.execute(
+                calculate_previous_period=False,
+                query_filter_abilities=[query_filter_ability],
+            )
+        else:
+            response = topn_request.execute(calculate_previous_period=False)
+    except ValueError as exc:
+        abort(400, str(exc))
     return _topn_to_distribution(target_dimension, response)
 
 

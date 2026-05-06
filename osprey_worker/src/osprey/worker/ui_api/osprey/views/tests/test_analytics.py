@@ -266,7 +266,7 @@ def test_kpi_summary_handles_empty_result(app: Flask, client: 'FlaskClient[Respo
 def test_rule_distribution_returns_400_on_value_error(app: Flask, client: 'FlaskClient[Response]') -> None:
     with mock.patch(
         'osprey.worker.ui_api.osprey.views.analytics.TopNDruidQuery.execute',
-        return_value=ValueError('Start date must be before end date'),
+        side_effect=ValueError('Start date must be before end date'),
     ):
         res = client.post(
             url_for('analytics.rule_distribution'),
@@ -275,3 +275,4 @@ def test_rule_distribution_returns_400_on_value_error(app: Flask, client: 'Flask
         )
 
     assert res.status_code == 400
+    assert b'Start date must be before end date' in res.data
