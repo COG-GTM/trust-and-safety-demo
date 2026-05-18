@@ -48,7 +48,7 @@ def validate_query() -> Any:
     except ValidationFailed as e:
         abort(Response(response=e.rendered(), status=BAD_REQUEST))
 
-    return query_filter
+    return jsonify({'query_filter': query_filter})
 
 
 @blueprint.route('/queries/user-emails', methods=['GET'])
