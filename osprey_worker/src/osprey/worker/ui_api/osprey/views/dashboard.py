@@ -19,6 +19,7 @@ from typing import Any, Dict, List, Optional
 from flask import Blueprint, abort, jsonify
 from osprey.worker.lib.singletons import ENGINE
 from osprey.worker.ui_api.osprey.lib.abilities import (
+    CanViewEventsByAction,
     CanViewEventsByEntity,
     HashableEntityKey,
     require_ability,
@@ -705,12 +706,35 @@ def dashboard_verdict_distribution(request_model: VerdictDistributionRequest) ->
 @blueprint.route('/dashboard/recent-alerts', methods=['POST'])
 @marshal_with(RecentAlertsRequest)
 @require_ability(CanViewEventsByEntity)
+@require_ability(CanViewEventsByAction)
 def dashboard_recent_alerts(request_model: RecentAlertsRequest) -> Any:
     """Return the most recent rule-triggered effects (bans + label mutations)."""
     require_ability_with_request(request_model, CanViewEventsByEntity)
+    require_ability_with_request(request_model, CanViewEventsByAction)
     user_filter = parse_query_filter(request_model.query_filter)
 
     limit = max(1, min(MAX_RECENT_ALERTS_LIMIT, request_model.limit))
+
+    # This is a row-level scan that exposes ``ActionName`` to the operator, so
+    # follow the same pattern as ``events.scan_query`` and inject the user's
+    # ``CanViewEventsByAction`` allow-list into the Druid filter clause.  This
+    # prevents an operator with entity access but restricted action access from
+    # observing alerts from actions they are not permitted to see.
+    action_filter_ability = get_current_user().get_ability(CanViewEventsByAction)
+    action_filter: Optional[Dict[str, Any]] = (
+        action_filter_ability._get_query_filter() if action_filter_ability is not None else None
+    )
+
+    effect_filter: Dict[str, Any] = {
+        'type': 'or',
+        'fields': [
+            _not_null_filter(LABEL_MUTATIONS_DIMENSION),
+            _not_null_filter(BAN_USER_DIMENSION),
+        ],
+    }
+    extra_filter: Dict[str, Any] = (
+        {'type': 'and', 'fields': [effect_filter, action_filter]} if action_filter else effect_filter
+    )
 
     rows = _build_query(
         DruidQueryTypes.SCAN,
@@ -718,13 +742,7 @@ def dashboard_recent_alerts(request_model: RecentAlertsRequest) -> Any:
         request_model.end,
         user_filter=user_filter,
         entity=request_model.entity,
-        extra_filter={
-            'type': 'or',
-            'fields': [
-                _not_null_filter(LABEL_MUTATIONS_DIMENSION),
-                _not_null_filter(BAN_USER_DIMENSION),
-            ],
-        },
+        extra_filter=extra_filter,
         order='descending',
         limit=limit,
         columns=[
