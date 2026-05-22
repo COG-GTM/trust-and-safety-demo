@@ -1,0 +1,72 @@
+.page {
+  flex-grow: 1;
+  background-color: var(--background-secondary);
+  padding: 24px;
+  overflow-y: auto;
+}
+
+.header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.title {
+  margin-bottom: 0 !important;
+}
+
+.toolbar {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+}
+
+.lookback {
+  min-width: 150px;
+}
+
+.statsRow {
+  margin-bottom: 16px;
+}
+
+.section {
+  margin-bottom: 16px;
+}
+
+.sectionTitle {
+  margin-bottom: 4px !important;
+}
+
+.sectionSubtitle {
+  display: block;
+  margin-bottom: 12px;
+  font-size: 12px;
+}
+
+.muted {
+  color: var(--text-light-secondary);
+  font-size: 12px;
+}
+
+.up {
+  color: var(--error-primary);
+  font-weight: 600;
+}
+
+.down {
+  color: var(--success-primary);
+  font-weight: 600;
+}
+
+.flat {
+  color: var(--text-light-secondary);
+}
+
+.changeIcon {
+  margin-right: 4px;
+}

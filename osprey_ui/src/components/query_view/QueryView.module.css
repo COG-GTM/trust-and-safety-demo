@@ -70,3 +70,16 @@
 .pageContentLeft > :global(.ant-menu) {
   background-color: inherit;
 }
+
+.toolbarRight {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  padding-right: 8px;
+}
+
+.entityProfileWrapper {
+  padding: 12px 12px 0;
+  border-bottom: 1px solid var(--divider);
+}

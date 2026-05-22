@@ -1,0 +1,23 @@
+.wrapper {
+  padding: 12px 16px 0;
+}
+
+.card {
+  background-color: var(--background-primary);
+  border: 1px solid var(--divider);
+  border-radius: 6px;
+  padding: 12px;
+  height: 100%;
+}
+
+.cardTitle {
+  display: block;
+  font-size: 13px;
+  margin-bottom: 2px;
+}
+
+.cardSubtitle {
+  display: block;
+  font-size: 11px;
+  margin-bottom: 8px;
+}
