@@ -11,14 +11,14 @@ import HTTPUtils, { HTTPResponse } from '../utils/HTTPUtils';
 
 import { getBaseRequest } from './EventActions';
 
-const EMPTY_SERIES = { total: 0, points: [] };
+const emptyMetricSeries = () => ({ total: 0, points: [] });
 
-const EMPTY_SUMMARY: SummaryResponse = {
-  events: EMPTY_SERIES,
-  rules_fired: EMPTY_SERIES,
-  labels_applied: EMPTY_SERIES,
-  verdicts_issued: EMPTY_SERIES,
-};
+const emptySummary = (): SummaryResponse => ({
+  events: emptyMetricSeries(),
+  rules_fired: emptyMetricSeries(),
+  labels_applied: emptyMetricSeries(),
+  verdicts_issued: emptyMetricSeries(),
+});
 
 export async function getDashboardSummary(
   query: BaseQueryRequest,
@@ -28,7 +28,7 @@ export async function getDashboardSummary(
     ...getBaseRequest(query),
     granularity,
   });
-  if (!response.ok) return EMPTY_SUMMARY;
+  if (!response.ok) return emptySummary();
   return response.data as SummaryResponse;
 }
 
