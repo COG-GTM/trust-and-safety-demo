@@ -20,9 +20,11 @@ from flask import Blueprint, abort, jsonify
 from osprey.worker.lib.singletons import ENGINE
 from osprey.worker.ui_api.osprey.lib.abilities import (
     CanViewEventsByEntity,
+    HashableEntityKey,
     require_ability,
     require_ability_with_request,
 )
+from osprey.worker.ui_api.osprey.lib.auth import get_current_user
 from pydantic.main import BaseModel
 from pydruid.query import QueryBuilder
 
@@ -775,6 +777,25 @@ def entity_profile(entity_type: str, entity_id: str) -> Any:
     """
     if not entity_type or not entity_id:
         return abort(400, 'entity_type and entity_id are required')
+
+    # ``@require_ability`` only enforces that the user *has*
+    # ``CanViewEventsByEntity``; the other dashboard endpoints additionally
+    # call ``require_ability_with_request`` which routes through
+    # ``CanViewEventsByEntity._request_is_allowed`` to enforce entity-scoped
+    # restrictions.  Because this endpoint takes ``entity_type`` and
+    # ``entity_id`` from the URL (not a ``BaseDruidQuery`` body), we apply the
+    # same item-level check directly so users with entity-scoped abilities
+    # cannot bypass their scope by hitting ``/entity/<type>/<id>/profile``.
+    current_user = get_current_user()
+    ability = current_user.get_ability(CanViewEventsByEntity)
+    if ability is None or not ability.item_is_allowed(HashableEntityKey(id=entity_id, type=entity_type)):
+        abort(
+            401,
+            (
+                f'User `{current_user.email}` with ability `CanViewEventsByEntity` is not '
+                f'authorized to view entity `{entity_type}/{entity_id}`'
+            ),
+        )
 
     end = datetime.now(timezone.utc)
     start = end - timedelta(hours=24)
