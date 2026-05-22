@@ -651,6 +651,23 @@ def dashboard_verdict_distribution(request_model: VerdictDistributionRequest) ->
     require_ability_with_request(request_model, CanViewEventsByEntity)
     user_filter = parse_query_filter(request_model.query_filter)
 
+    # The donut chart requires mutually exclusive slices.  ``allow`` / ``ban`` /
+    # ``errors`` would otherwise overlap (an errored event can also have a ban
+    # verdict or no ban verdict at all), inflating the pie total and skewing
+    # ``{point.percentage}``.  Compose the buckets as an explicit partition of
+    # the event space: events with errors land in ``errors``; remaining events
+    # split into ``allow`` (no ban) and ``ban``.
+    has_error_filter: Dict[str, Any] = {
+        'type': 'bound',
+        'dimension': ERROR_COUNT_DIMENSION,
+        'lower': '1',
+        'lowerStrict': False,
+        'ordering': 'numeric',
+    }
+    no_error_filter: Dict[str, Any] = {'type': 'not', 'field': has_error_filter}
+    ban_filter = _not_null_filter(BAN_USER_DIMENSION)
+    no_ban_filter: Dict[str, Any] = {'type': 'null', 'column': BAN_USER_DIMENSION}
+
     rows = _build_query(
         DruidQueryTypes.TIMESERIES,
         request_model.start,
@@ -661,19 +678,13 @@ def dashboard_verdict_distribution(request_model: VerdictDistributionRequest) ->
         aggregations={
             'allow': _filtered_count(
                 'allow',
-                {'type': 'null', 'column': BAN_USER_DIMENSION},
+                {'type': 'and', 'fields': [no_ban_filter, no_error_filter]},
             ),
-            'ban': _filtered_count('ban', _not_null_filter(BAN_USER_DIMENSION)),
-            'errors': _filtered_count(
-                'errors',
-                {
-                    'type': 'bound',
-                    'dimension': ERROR_COUNT_DIMENSION,
-                    'lower': '1',
-                    'lowerStrict': False,
-                    'ordering': 'numeric',
-                },
+            'ban': _filtered_count(
+                'ban',
+                {'type': 'and', 'fields': [ban_filter, no_error_filter]},
             ),
+            'errors': _filtered_count('errors', has_error_filter),
         },
     )
 
