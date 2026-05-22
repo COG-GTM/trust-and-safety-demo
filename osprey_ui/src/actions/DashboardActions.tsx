@@ -40,7 +40,7 @@ export async function getRulePerformance(
   const response: HTTPResponse = await HTTPUtils.post('dashboard/rule-performance', {
     ...getBaseRequest(query),
     granularity,
-    /* eslint-disable-next-line */
+    // eslint-disable-next-line camelcase -- backend uses snake_case top_n in the request schema
     top_n: topN,
   });
   if (!response.ok) return { rules: [], series: [], false_positive_rate: null };
@@ -55,7 +55,7 @@ export async function getLabelActivity(
   const response: HTTPResponse = await HTTPUtils.post('dashboard/label-activity', {
     ...getBaseRequest(query),
     granularity,
-    /* eslint-disable-next-line */
+    // eslint-disable-next-line camelcase -- backend uses snake_case top_n in the request schema
     top_n: topN,
   });
   if (!response.ok) return { points: [], label_names: [] };
