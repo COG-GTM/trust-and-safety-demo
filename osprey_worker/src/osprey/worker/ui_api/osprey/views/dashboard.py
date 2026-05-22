@@ -59,10 +59,16 @@ DEFAULT_TOPN_LIMIT = 10
 
 
 def _not_null_filter(dimension: str) -> Dict[str, Any]:
-    """Returns a Druid filter that matches rows where ``dimension`` is not null."""
+    """Returns a Druid filter that matches rows where ``dimension`` is not null.
+
+    Uses the SQL-compatible ``null`` filter type so that ARRAY-typed columns
+    (such as the rule-effect mutation dimensions) are handled by Druid; the
+    older ``{"type":"selector","value":null}`` form raises
+    ``Predicate does not support ARRAY types`` on Druid 33+.
+    """
     return {
         'type': 'not',
-        'field': {'type': 'selector', 'dimension': dimension, 'value': None},
+        'field': {'type': 'null', 'column': dimension},
     }
 
 
@@ -94,6 +100,7 @@ def _build_query(
 
     context = kwargs.setdefault('context', {})
     context.setdefault('timeout', DEFAULT_DRUID_QUERY_TIMEOUT)
+    context.setdefault('vectorize', False)
 
     druid = DRUID.instance()
 
@@ -281,8 +288,9 @@ def _normalize_timestamp(value: Any) -> str:
 
 
 def _decode_string_array(raw: Any) -> List[str]:
-    """Druid surfaces array-typed dimensions as either a list, a JSON-encoded
-    string, or ``None``.  Normalize all forms into a list of strings.
+    """Druid surfaces array-typed dimensions as a list, a JSON-encoded string,
+    a native ``[a,b,c]``-style string (no JSON quoting), or ``None``.  Normalize
+    all forms into a list of strings.
     """
     if raw is None:
         return []
@@ -292,13 +300,20 @@ def _decode_string_array(raw: Any) -> List[str]:
         stripped = raw.strip()
         if not stripped:
             return []
-        if stripped.startswith('['):
+        if stripped.startswith('[') and stripped.endswith(']'):
+            inner = stripped[1:-1].strip()
+            if not inner:
+                return []
             try:
                 parsed = json.loads(stripped)
                 if isinstance(parsed, list):
                     return [str(item) for item in parsed if item is not None]
             except json.JSONDecodeError:
-                logger.debug('Failed to JSON-decode array dimension: %r', raw)
+                # Druid's native ARRAY response is bracket-wrapped and
+                # comma-separated without JSON quoting (e.g. ``[User/meow/1]``
+                # or ``[a,b]``).  Fall through to the comma-split path.
+                pass
+            return [piece.strip() for piece in inner.split(',') if piece.strip()]
         return [stripped]
     return [str(raw)]
 
@@ -646,11 +661,7 @@ def dashboard_verdict_distribution(request_model: VerdictDistributionRequest) ->
         aggregations={
             'allow': _filtered_count(
                 'allow',
-                {
-                    'type': 'selector',
-                    'dimension': BAN_USER_DIMENSION,
-                    'value': None,
-                },
+                {'type': 'null', 'column': BAN_USER_DIMENSION},
             ),
             'ban': _filtered_count('ban', _not_null_filter(BAN_USER_DIMENSION)),
             'errors': _filtered_count(
