@@ -11,6 +11,8 @@ List of notable changes:
     defined once. This protects us from adding dependencies after a node has already started
     execution.
   - prepare() is a no-op if run multiple times with no add() call in between
+  - prepare() only scans the nodes added since the previous prepare() instead of the whole graph,
+    so the Require/Import pattern (many small add() + prepare() rounds) stays linear in graph size.
   - the find_cycle() is removed. The Osprey execution graph is already validated to be acyclic,
     so we optimize the prepare() step by skipping the cycle check.
 """
@@ -22,11 +24,14 @@ _NODE_DONE = -2
 
 
 class _NodeInfo:
-    __slots__ = 'node', 'npredecessors', 'successors'
+    __slots__ = 'node', 'npredecessors', 'successors', 'order'
 
-    def __init__(self, node: Any):
+    def __init__(self, node: Any, order: int):
         # The node this class is augmenting.
         self.node = node
+
+        # Insertion position in the graph, used by prepare() to keep ready nodes in insertion order.
+        self.order = order
 
         # Number of predecessors, generally >= 0. When this value falls to 0,
         # and is returned by get_ready(), this is set to _NODE_OUT and when the
@@ -61,6 +66,10 @@ class TopologicalSorter:
         self._npassedout = 0
         self._nfinished = 0
         self._needs_prepare = True
+        # Nodes created since the last prepare(), in insertion order.
+        self._added_since_prepare: List[_NodeInfo] = []
+        # False once done() appends a ready node out of insertion order.
+        self._ready_nodes_in_order = True
 
         if graph is not None:
             for node, predecessors in graph.items():
@@ -69,7 +78,8 @@ class TopologicalSorter:
     def _get_nodeinfo(self, node: Any) -> _NodeInfo:
         result = self._node2info.get(node)
         if result is None:
-            self._node2info[node] = result = _NodeInfo(node)
+            self._node2info[node] = result = _NodeInfo(node, len(self._node2info))
+            self._added_since_prepare.append(result)
         return result
 
     def already_added(self, node: Any) -> bool:
@@ -114,7 +124,16 @@ class TopologicalSorter:
         if not self._needs_prepare:
             return
 
-        self._ready_nodes = [i.node for i in self._node2info.values() if i.npredecessors == 0]
+        # add() never changes the predecessor count of a node that already existed, so the nodes with no
+        # outstanding predecessors are the current ready nodes plus the ready nodes added since the last
+        # prepare(). This yields the same list, in the same (insertion) order, as scanning every node.
+        if not self._ready_nodes_in_order:
+            n2i = self._node2info
+            self._ready_nodes.sort(key=lambda node: n2i[node].order)
+            self._ready_nodes_in_order = True
+        # New nodes come after every existing node in insertion order, so appending keeps the list sorted.
+        self._ready_nodes.extend(i.node for i in self._added_since_prepare if i.npredecessors == 0)
+        self._added_since_prepare = []
         self._needs_prepare = False
 
     def get_ready(self) -> Tuple[Any, ...]:
@@ -202,7 +221,10 @@ class TopologicalSorter:
                 successor_info = n2i[successor]
                 successor_info.npredecessors -= 1
                 if successor_info.npredecessors == 0:
-                    self._ready_nodes.append(successor)
+                    ready_nodes = self._ready_nodes
+                    if ready_nodes and n2i[ready_nodes[-1]].order > successor_info.order:
+                        self._ready_nodes_in_order = False
+                    ready_nodes.append(successor)
             self._nfinished += 1
 
     def static_order(self) -> Iterator[Any]:
