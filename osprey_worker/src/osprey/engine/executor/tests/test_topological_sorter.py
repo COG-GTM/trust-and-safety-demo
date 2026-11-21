@@ -27,7 +27,7 @@ def _run_dynamic(sorter: TopologicalSorter, seed: int) -> List[Tuple[Any, ...]]:
     def add_batch() -> None:
         nonlocal next_node
         for _ in range(rng.randint(1, 8)):
-            preds = rng.sample(added, k=min(len(added), rng.randint(0, 3)))
+            preds: List[Any] = rng.sample(added, k=min(len(added), rng.randint(0, 3)))
             if rng.random() < 0.2:
                 # A predecessor that has not been added yet gets created implicitly.
                 preds.append(f'implicit-{next_node}')
@@ -67,20 +67,31 @@ def test_prepare_after_done_keeps_insertion_order() -> None:
     sorter.add('d', 'a')
     sorter.prepare()
     assert sorter.get_ready() == ('a', 'b')
-    sorter.done('b', 'a')  # 'c' becomes ready before 'd'
+    sorter.done('a', 'b')  # 'd' becomes ready before 'c', out of insertion order
+    assert not sorter._ready_nodes_in_order
     sorter.add('e')
     sorter.prepare()
     assert sorter.get_ready() == ('c', 'd', 'e')
 
 
-def test_prepare_only_scans_new_nodes() -> None:
-    sorter = TopologicalSorter()
+class _NoScanDict(dict):  # type: ignore[type-arg]
+    def values(self) -> Any:
+        raise AssertionError('prepare() scanned every node')
+
+
+@pytest.mark.parametrize('sorter_cls', [TopologicalSorter, _FullScanTopologicalSorter])
+def test_prepare_only_scans_new_nodes(sorter_cls: type) -> None:
+    sorter = sorter_cls()
     for i in range(100):
         sorter.add(i)
     sorter.prepare()
-    sorter.get_ready()
+    assert sorter.get_ready() == tuple(range(100))
+    sorter._node2info = _NoScanDict(sorter._node2info)
     sorter.add('new', 0)
-    assert len(sorter._added_since_prepare) == 1
+    sorter.add('free')
+    if sorter_cls is _FullScanTopologicalSorter:
+        with pytest.raises(AssertionError, match='scanned every node'):
+            sorter.prepare()
+        return
     sorter.prepare()
-    assert sorter._added_since_prepare == []
-    assert sorter.get_ready() == ()
+    assert sorter.get_ready() == ('free',)
